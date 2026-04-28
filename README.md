@@ -59,34 +59,34 @@ Backend mapping:
 
 ```text
 agent_system/
-├── .env.example
-├── .gitignore
-├── pyproject.toml
-├── README.md
-├── requirements.txt
-└── src/
-    └── agent_system/
-        ├── __init__.py
-        ├── __main__.py
-        ├── config.py
-        ├── controller.py
-        ├── llm.py
-        ├── prompts.py
-        ├── ui.py
-        ├── agents/
-        │   ├── __init__.py
-        │   ├── base.py
-        │   ├── coder.py
-        │   ├── debugger.py
-        │   ├── planner.py
-        │   └── reviewer.py
-        ├── static/
-        │   ├── app.js
-        │   ├── index.html
-        │   └── styles.css
-        └── tools/
-            ├── __init__.py
-            └── executor.py
+|- .env.example
+|- .gitignore
+|- pyproject.toml
+|- README.md
+|- requirements.txt
+`- src/
+   `- agent_system/
+      |- __init__.py
+      |- __main__.py
+      |- config.py
+      |- controller.py
+      |- llm.py
+      |- prompts.py
+      |- ui.py
+      |- agents/
+      |  |- __init__.py
+      |  |- base.py
+      |  |- coder.py
+      |  |- debugger.py
+      |  |- planner.py
+      |  `- reviewer.py
+      |- static/
+      |  |- app.js
+      |  |- index.html
+      |  `- styles.css
+      `- tools/
+         |- __init__.py
+         `- executor.py
 ```
 
 ## Requirements
