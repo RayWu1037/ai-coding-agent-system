@@ -1,6 +1,13 @@
 # AI-Assisted Project Building for Systems-Oriented Undergraduates
 ## A Case Study in Agentic Coding, Failure Analysis, Prompt Design, and Skill Prioritization
 
+**Author:** Ruiyi Wu  
+**Affiliation:** Department of Computer Science, University of Illinois Chicago  
+**Contact:** ray20171037@gmail.com  
+**Keywords:** multi-agent systems, AI-assisted software engineering, prompt engineering, undergraduate education, local coding harness, semantic validation, provider fallback
+
+---
+
 ### Abstract
 
 This paper studies how a systems-oriented undergraduate can use large language models to design, implement, debug, document, evaluate, and publicly present a non-trivial software project. The case study is a local multi-agent coding harness built around planner, coder, debugger, reviewer, execution, validation, benchmarking, diagnostics, research-wiki ingestion, and cross-model session handoff. Instead of treating AI as a one-shot code generator, this work examines AI as a collaborator embedded in a longer engineering loop [1][2]. The paper focuses on four questions: which failures repeatedly occur in AI-assisted project work, which prompt patterns reduce those failures while controlling token cost, which validation layers are necessary to turn runnable output into usable output, and which areas of computer science remain most valuable for undergraduates in an AI-rich workflow. The main result is that AI increases leverage, but only for students who can specify constraints, inspect failure modes, validate behavior, and restructure a system when naive generation fails.

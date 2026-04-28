@@ -1,5 +1,7 @@
 # Multi-Agent Coding System
 
+[![CI](https://github.com/RayWu1037/ai-coding-agent-system/actions/workflows/ci.yml/badge.svg)](https://github.com/RayWu1037/ai-coding-agent-system/actions/workflows/ci.yml)
+
 A local multi-agent coding harness that mirrors a practical "controller + specialized agents + tool execution" workflow.
 
 This project supports two runtime styles:

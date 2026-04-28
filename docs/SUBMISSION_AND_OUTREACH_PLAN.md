@@ -112,9 +112,9 @@ Why it is probably too early today:
 
 Before JOSS becomes realistic, the project should add:
 
-- an explicit OSI-approved license
+- ~~an explicit OSI-approved license~~ **Done.** MIT License added to repo root.
 - releases/tags
-- CI
+- ~~CI~~ **Done.** GitHub Actions workflow added at `.github/workflows/ci.yml`; badge in README.
 - more documented benchmark results
 - stronger packaging polish
 - at least several months of public history

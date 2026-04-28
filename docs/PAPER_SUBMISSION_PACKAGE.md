@@ -70,7 +70,7 @@ Use a lightweight placeholder format first, then convert to the venue style late
 2. Convert the current bracketed references into the citation style required by the target venue.
 3. Decide whether the Mermaid architecture diagram should stay inline or be redrawn as a figure image.
 4. Refine Table 1 using venue-specific formatting rules.
-5. Add author line, affiliation, and contact block to the main paper draft.
+5. ~~Add author line, affiliation, and contact block to the main paper draft.~~ **Done.** Author block with affiliation, contact, and keywords added to `UNDERGRAD_AI_WORKFLOW_PAPER.md`.
 
 ## Current Status
 
