@@ -115,7 +115,7 @@ Before JOSS becomes realistic, the project should add:
 - ~~an explicit OSI-approved license~~ **Done.** MIT License added to repo root.
 - releases/tags
 - ~~CI~~ **Done.** GitHub Actions workflow added at `.github/workflows/ci.yml`; badge in README.
-- more documented benchmark results
+- ~~more documented benchmark results~~ **Done.** First run results in `docs/BENCHMARK_RESULTS.md` (4/4 passed).
 - stronger packaging polish
 - at least several months of public history
 
