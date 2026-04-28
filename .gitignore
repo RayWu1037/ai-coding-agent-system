@@ -21,3 +21,9 @@ processed.json
 .test_*/
 .test_controller_validation/
 tmp*/
+!research_wiki/
+!research_wiki/raw/
+!research_wiki/raw/*.md
+!research_wiki/notes/
+!research_wiki/notes/*.md
+!research_wiki/state.json
