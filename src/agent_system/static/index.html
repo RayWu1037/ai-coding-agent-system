@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Agent System UI</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">Local Multi-Agent Harness</p>
+        <h1>Controller, coder, debugger, reviewer.</h1>
+        <p class="lede">Submit a Python task, watch the loop progress, and inspect plan, review, and final code in one place.</p>
+      </section>
+
+      <section class="panel">
+        <form id="task-form" class="task-form">
+          <label for="task">Task</label>
+          <textarea id="task" name="task" rows="5" placeholder="Build a command-line todo app with CSV persistence and unit tests." required></textarea>
+
+          <div class="form-row">
+            <div>
+              <label for="iterations">Max debug iterations</label>
+              <input id="iterations" name="iterations" type="number" min="1" max="10" placeholder="3">
+            </div>
+            <button type="submit">Run Agent</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="grid">
+        <article class="panel status-panel">
+          <div class="section-head">
+            <h2>Run Status</h2>
+            <span id="status-pill" class="pill">idle</span>
+          </div>
+          <p id="status-message" class="muted">No active run.</p>
+          <ul id="timeline" class="timeline"></ul>
+        </article>
+
+        <article class="panel history-panel">
+          <div class="section-head">
+            <h2>Recent Jobs</h2>
+          </div>
+          <div id="jobs" class="job-list"></div>
+        </article>
+      </section>
+
+      <section class="grid outputs">
+        <article class="panel">
+          <div class="section-head">
+            <h2>Plan</h2>
+          </div>
+          <pre id="plan-output" class="code-block"></pre>
+        </article>
+
+        <article class="panel">
+          <div class="section-head">
+            <h2>Review</h2>
+          </div>
+          <pre id="review-output" class="code-block"></pre>
+        </article>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <h2>Final Code</h2>
+        </div>
+        <pre id="code-output" class="code-block code-large"></pre>
+      </section>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+  </html>

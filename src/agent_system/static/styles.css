@@ -1,0 +1,237 @@
+:root {
+  --bg: #f3efe5;
+  --panel: rgba(255, 250, 240, 0.82);
+  --ink: #1f2a2a;
+  --muted: #5b6464;
+  --line: rgba(31, 42, 42, 0.12);
+  --accent: #d85f38;
+  --accent-soft: #ffd7b5;
+  --success: #2f6b3b;
+  --error: #8a2f2f;
+  --shadow: 0 18px 50px rgba(104, 78, 48, 0.15);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top left, rgba(216, 95, 56, 0.22), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(47, 107, 59, 0.18), transparent 30%),
+    linear-gradient(180deg, #efe6d2 0%, var(--bg) 100%);
+}
+
+.shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px 64px;
+}
+
+.hero {
+  padding: 12px 4px 28px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.78rem;
+  color: var(--accent);
+}
+
+h1, h2 {
+  margin: 0;
+  font-weight: 600;
+}
+
+h1 {
+  font-size: clamp(2.3rem, 6vw, 4.4rem);
+  line-height: 0.96;
+  max-width: 12ch;
+}
+
+.lede {
+  max-width: 60ch;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin-top: 14px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+  padding: 18px 18px 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.outputs {
+  grid-template-columns: 1fr 1fr;
+}
+
+.task-form {
+  display: grid;
+  gap: 10px;
+}
+
+label {
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+textarea,
+input {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.72);
+  border-radius: 16px;
+  padding: 14px 16px;
+  color: var(--ink);
+  font: inherit;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 128px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 14px;
+  align-items: end;
+}
+
+button {
+  appearance: none;
+  border: 0;
+  border-radius: 16px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, var(--accent) 0%, #a5432a 100%);
+  color: white;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pill,
+.job-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--accent-soft);
+  color: #7a351f;
+}
+
+[data-state="done"],
+[data-state="success"] {
+  background: rgba(47, 107, 59, 0.14);
+  color: var(--success);
+}
+
+[data-state="failed"] {
+  background: rgba(138, 47, 47, 0.14);
+  color: var(--error);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.timeline {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0 0;
+  display: grid;
+  gap: 10px;
+}
+
+.timeline-item {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+.job-list {
+  display: grid;
+  gap: 10px;
+}
+
+.job-card {
+  text-align: left;
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--ink);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  display: grid;
+  gap: 6px;
+}
+
+.job-card strong,
+.timeline-item strong {
+  font-size: 0.95rem;
+}
+
+.job-card small,
+.timeline-item span {
+  color: var(--muted);
+}
+
+.code-block {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: rgba(33, 40, 40, 0.96);
+  color: #eef4f1;
+  border-radius: 16px;
+  padding: 16px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.9rem;
+  min-height: 220px;
+  overflow: auto;
+}
+
+.code-large {
+  min-height: 420px;
+}
+
+@media (max-width: 900px) {
+  .grid,
+  .outputs,
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .shell {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
