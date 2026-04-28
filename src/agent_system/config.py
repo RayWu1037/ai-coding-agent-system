@@ -19,6 +19,8 @@ class Settings:
     cli_timeout_seconds: int
     execution_timeout_seconds: int
     max_debug_iterations: int
+    provider_cooldown_seconds: int
+    provider_max_retries: int
 
     @property
     def has_openai(self) -> bool:
@@ -44,6 +46,8 @@ def load_settings() -> Settings:
         cli_timeout_seconds=int(os.getenv("CLI_TIMEOUT_SECONDS", "300")),
         execution_timeout_seconds=int(os.getenv("EXECUTION_TIMEOUT_SECONDS", "8")),
         max_debug_iterations=int(os.getenv("MAX_DEBUG_ITERATIONS", "3")),
+        provider_cooldown_seconds=int(os.getenv("PROVIDER_COOLDOWN_SECONDS", "900")),
+        provider_max_retries=int(os.getenv("PROVIDER_MAX_RETRIES", "1")),
     )
 
 

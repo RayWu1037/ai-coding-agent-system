@@ -27,6 +27,7 @@ This repository is useful as an AI engineering portfolio project because it demo
 - Anthropic SDK plus OpenAI SDK integration
 - environment-variable based configuration
 - doctor/self-check mode for runtime, path, backend, and live provider diagnostics
+- offline benchmark/eval suite for representative local workloads and artifact checks
 - CLI entry point for single-task runs
 - local Web UI for submitting tasks and inspecting runs
 
@@ -198,6 +199,13 @@ Save a doctor report to Markdown or JSON:
 ```powershell
 .\run_cli.bat --doctor --output reports\doctor.md
 .\run_cli.bat --doctor --live --output reports\doctor.json
+```
+
+Run offline benchmarks:
+
+```powershell
+.\run_cli.bat --benchmark
+.\run_cli.bat --benchmark --output reports\benchmarks.md
 ```
 
 ## Running The Web UI

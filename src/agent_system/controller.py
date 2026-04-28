@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Callable
 
 from agent_system.agents.coder import CoderAgent
+from agent_system.benchmarks import run_benchmarks
 from agent_system.agents.debugger import DebuggerAgent
 from agent_system.agents.planner import PlannerAgent
 from agent_system.agents.reviewer import ReviewerAgent
@@ -19,6 +20,10 @@ from agent_system.doctor import run_doctor
 from agent_system.llm import LLMError, LLMRegistry
 from agent_system.task_profiles import is_knowledge_base_task
 from agent_system.tools.executor import PythonExecutor
+from agent_system.validation import (
+    inspect_knowledge_base_artifacts,
+    knowledge_base_validation_sample,
+)
 
 
 @dataclass
@@ -224,7 +229,7 @@ class Controller:
             raw_dir.mkdir(parents=True, exist_ok=True)
             vault_dir.mkdir(parents=True, exist_ok=True)
             script_path.write_text(code, encoding="utf-8")
-            (raw_dir / "sample.md").write_text(_knowledge_base_validation_sample(), encoding="utf-8")
+            (raw_dir / "sample.md").write_text(knowledge_base_validation_sample(), encoding="utf-8")
             try:
                 completed = subprocess.run(
                     [sys.executable, str(script_path)],
@@ -244,90 +249,12 @@ class Controller:
                     f"Validation stderr/stdout:\n{stderr or '[no output]'}"
                 )
 
-            errors = _inspect_knowledge_base_artifacts(temp_dir)
+            errors = inspect_knowledge_base_artifacts(temp_dir)
             if not errors:
                 return ""
             return "Semantic validation failed:\n" + "\n".join(f"- {error}" for error in errors)
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
-
-
-def _knowledge_base_validation_sample() -> str:
-    return """# AI Agent
-
-An AI Agent can turn raw notes into linked wiki notes inside an Obsidian knowledge base.
-
-## Core Idea
-
-The system reads files from a raw folder, extracts stable concepts, and writes markdown notes with [[links]] into a wiki vault.
-
-## Output Expectations
-
-The generated note should keep the top-level title AI Agent and avoid generic concepts like Core Idea or Notes.
-"""
-
-
-def _inspect_knowledge_base_artifacts(root_dir: Path) -> list[str]:
-    note_path = _find_generated_note(root_dir, "AI Agent.md")
-    index_path = _find_generated_index(root_dir)
-    note_files = sorted(
-        path.name
-        for path in root_dir.rglob("*.md")
-        if path.name.lower() not in {"_index.md", "index.md"}
-    )
-    errors: list[str] = []
-
-    if note_path is None:
-        errors.append(
-            "expected an output note named 'AI Agent.md' derived from the sample file's top-level H1; "
-            f"found: {', '.join(note_files) if note_files else 'no note files'}"
-        )
-        return errors
-
-    note_text = note_path.read_text(encoding="utf-8", errors="replace")
-    if "# AI Agent" not in note_text:
-        errors.append("generated note does not preserve the source title 'AI Agent' as the main H1")
-    if "[[Notes. Concept]]" in note_text:
-        errors.append("generated note contains malformed or low-value concept label 'Notes. Concept'")
-    if "[[Core Idea]]" in note_text:
-        errors.append("generated note promoted the generic subsection heading 'Core Idea' into a concept link")
-    lowered_note = note_text.casefold()
-    if "raw notes" not in lowered_note or "wiki notes" not in lowered_note:
-        errors.append("generated note summary/body did not preserve the core relation between Raw Notes and Wiki Notes")
-
-    if index_path is None:
-        errors.append("knowledge-base index file was not created")
-        return errors
-
-    index_text = index_path.read_text(encoding="utf-8", errors="replace")
-    if "[[AI Agent]]" not in index_text:
-        errors.append("knowledge-base index does not link to [[AI Agent]]")
-    return errors
-
-
-def _find_generated_note(root_dir: Path, filename: str) -> Path | None:
-    preferred_dirs = ["vault", "wiki", "notes"]
-    for directory_name in preferred_dirs:
-        candidate = root_dir / directory_name / filename
-        if candidate.exists():
-            return candidate
-    for candidate in root_dir.rglob(filename):
-        if candidate.is_file():
-            return candidate
-    return None
-
-
-def _find_generated_index(root_dir: Path) -> Path | None:
-    for directory_name in ["vault", "wiki", "notes"]:
-        for filename in ["_index.md", "Index.md", "index.md"]:
-            candidate = root_dir / directory_name / filename
-            if candidate.exists():
-                return candidate
-    for filename in ["_index.md", "Index.md", "index.md"]:
-        candidate = root_dir / filename
-        if candidate.exists():
-            return candidate
-    return None
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -368,6 +295,17 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="When used with --doctor, save the report to a .md or .json file.",
     )
+    parser.add_argument(
+        "--benchmark",
+        action="store_true",
+        help="Run offline benchmark/eval checks instead of a coding task.",
+    )
+    parser.add_argument(
+        "--benchmark-output",
+        type=Path,
+        default=None,
+        help="When used with --benchmark, save the report to a .md or .json file.",
+    )
     return parser
 
 
@@ -375,13 +313,19 @@ def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
     if args.doctor:
-        if args.task:
-            parser.error("--doctor cannot be combined with --task.")
+        if args.task or args.benchmark:
+            parser.error("--doctor cannot be combined with --task or --benchmark.")
         return run_doctor(live=args.doctor_live, output_path=args.doctor_output)
+    if args.benchmark:
+        if args.task:
+            parser.error("--benchmark cannot be combined with --task.")
+        return run_benchmarks(output_path=args.benchmark_output)
     if not args.task:
-        parser.error("--task is required unless --doctor is used.")
+        parser.error("--task is required unless --doctor or --benchmark is used.")
     if args.doctor_output is not None:
         parser.error("--doctor-output requires --doctor.")
+    if args.benchmark_output is not None:
+        parser.error("--benchmark-output requires --benchmark.")
 
     try:
         summary = Controller().run(

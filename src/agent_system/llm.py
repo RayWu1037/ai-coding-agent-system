@@ -3,6 +3,7 @@ from __future__ import annotations
 import shutil
 import subprocess
 import tempfile
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
@@ -25,6 +26,12 @@ class AggregateLLMError(LLMError):
         super().__init__(f"All providers failed for {operation}:\n{joined}")
         self.operation = operation
         self.errors = errors
+
+
+@dataclass
+class ProviderCooldown:
+    reason: str
+    until_monotonic: float
 
 
 @dataclass
@@ -189,6 +196,7 @@ class LLMRegistry:
             if settings.has_openai
             else None
         )
+        self._provider_cooldowns: dict[str, ProviderCooldown] = {}
         self._initialize_cli_clients()
 
     def plan_and_code(self, message: Message) -> str:
@@ -229,13 +237,70 @@ class LLMRegistry:
 
         errors: list[str] = []
         for label, complete in candidates:
-            try:
-                return complete()
-            except TimeoutError as exc:
-                errors.append(f"{label}: {exc}")
-            except LLMError as exc:
-                errors.append(f"{label}: {exc}")
+            cooldown = self._active_cooldown(label)
+            if cooldown is not None:
+                errors.append(f"{label}: cooling down ({cooldown.reason})")
+                continue
+
+            max_attempts = max(1, self._settings.provider_max_retries + 1)
+            for attempt in range(1, max_attempts + 1):
+                try:
+                    return complete()
+                except TimeoutError as exc:
+                    if attempt >= max_attempts:
+                        errors.append(f"{label}: {exc}")
+                    continue
+                except LLMError as exc:
+                    should_retry = self._should_retry_provider_error(exc)
+                    should_cooldown = self._should_cooldown_provider_error(exc)
+                    if should_cooldown:
+                        self._provider_cooldowns[label] = ProviderCooldown(
+                            reason=str(exc).splitlines()[0],
+                            until_monotonic=time.monotonic()
+                            + self._settings.provider_cooldown_seconds,
+                        )
+                    if should_retry and attempt < max_attempts:
+                        continue
+                    errors.append(f"{label}: {exc}")
+                    break
         raise AggregateLLMError(operation, errors)
+
+    def _active_cooldown(self, label: str) -> ProviderCooldown | None:
+        cooldown = self._provider_cooldowns.get(label)
+        if cooldown is None:
+            return None
+        if time.monotonic() >= cooldown.until_monotonic:
+            self._provider_cooldowns.pop(label, None)
+            return None
+        return cooldown
+
+    @staticmethod
+    def _should_retry_provider_error(error: LLMError) -> bool:
+        detail = str(error).casefold()
+        retry_markers = [
+            "timed out",
+            "timeout",
+            "temporarily unavailable",
+            "connection reset",
+            "internal server error",
+            "429",
+            "rate limit",
+        ]
+        return any(marker in detail for marker in retry_markers)
+
+    @staticmethod
+    def _should_cooldown_provider_error(error: LLMError) -> bool:
+        detail = str(error).casefold()
+        cooldown_markers = [
+            "usage limit",
+            "quota",
+            "credits",
+            "not logged in",
+            "/login",
+            "access is denied",
+            "拒绝访问",
+        ]
+        return any(marker in detail for marker in cooldown_markers)
 
     def _initialize_cli_clients(self) -> None:
         if self._settings.backend not in {"auto", "cli"}:

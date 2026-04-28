@@ -3,7 +3,7 @@ import uuid
 import shutil
 from pathlib import Path
 
-from agent_system.controller import _inspect_knowledge_base_artifacts
+from agent_system.validation import inspect_knowledge_base_artifacts
 
 
 class ControllerValidationTests(unittest.TestCase):
@@ -37,7 +37,7 @@ class ControllerValidationTests(unittest.TestCase):
         )
         (notes_dir / "Index.md").write_text("- [[AI Agent]]\n", encoding="utf-8")
 
-        self.assertEqual(_inspect_knowledge_base_artifacts(test_root), [])
+        self.assertEqual(inspect_knowledge_base_artifacts(test_root), [])
 
     def test_inspect_knowledge_base_artifacts_flags_title_drift_and_noise(self) -> None:
         test_root = self._make_test_root()
@@ -57,7 +57,7 @@ class ControllerValidationTests(unittest.TestCase):
         )
         (notes_dir / "Index.md").write_text("- [[Core Idea]]\n", encoding="utf-8")
 
-        errors = _inspect_knowledge_base_artifacts(test_root)
+        errors = inspect_knowledge_base_artifacts(test_root)
 
         self.assertTrue(any("AI Agent.md" in error for error in errors))
 

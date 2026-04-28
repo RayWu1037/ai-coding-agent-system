@@ -31,6 +31,8 @@ class DoctorTests(unittest.TestCase):
             cli_timeout_seconds=300,
             execution_timeout_seconds=8,
             max_debug_iterations=3,
+            provider_cooldown_seconds=60,
+            provider_max_retries=1,
         )
         result = _check_backend_readiness(settings, claude_path="claude.exe", codex_path=None)
         self.assertEqual(result.status, "fail")
@@ -49,6 +51,8 @@ class DoctorTests(unittest.TestCase):
             cli_timeout_seconds=300,
             execution_timeout_seconds=8,
             max_debug_iterations=3,
+            provider_cooldown_seconds=60,
+            provider_max_retries=1,
         )
         text = format_doctor_report(settings, [], live=False)
         self.assertIn("=== DOCTOR ===", text)
@@ -68,6 +72,8 @@ class DoctorTests(unittest.TestCase):
             cli_timeout_seconds=300,
             execution_timeout_seconds=8,
             max_debug_iterations=3,
+            provider_cooldown_seconds=60,
+            provider_max_retries=1,
         )
         root = Path.cwd() / ".test_doctor" / uuid.uuid4().hex
         root.mkdir(parents=True, exist_ok=False)

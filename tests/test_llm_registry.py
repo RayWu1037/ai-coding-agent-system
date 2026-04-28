@@ -17,11 +17,20 @@ class _FakeClient:
 class LLMRegistryTests(unittest.TestCase):
     def _registry(self) -> LLMRegistry:
         registry = object.__new__(LLMRegistry)
-        registry._settings = type("Settings", (), {"backend": "cli"})()
+        registry._settings = type(
+            "Settings",
+            (),
+            {
+                "backend": "cli",
+                "provider_max_retries": 1,
+                "provider_cooldown_seconds": 60,
+            },
+        )()
         registry._claude_cli = None
         registry._codex_cli = None
         registry._anthropic = None
         registry._openai = None
+        registry._provider_cooldowns = {}
         return registry
 
     def test_plan_and_code_falls_back_after_cli_failure(self) -> None:
@@ -43,6 +52,16 @@ class LLMRegistryTests(unittest.TestCase):
 
         self.assertIn("Codex CLI", str(context.exception))
         self.assertIn("Claude CLI", str(context.exception))
+
+    def test_quota_error_puts_provider_on_cooldown(self) -> None:
+        registry = self._registry()
+        registry._claude_cli = _FakeClient(error=LLMError("usage limit reached"))
+        registry._codex_cli = _FakeClient(response="print('ok')")
+
+        result = registry.plan_and_code(Message(system="s", user="u"))
+
+        self.assertEqual(result, "print('ok')")
+        self.assertIn("Claude CLI", registry._provider_cooldowns)
 
 
 if __name__ == "__main__":
