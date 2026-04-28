@@ -190,6 +190,7 @@ Each run now saves:
 - `handoff.md`
 
 The handoff file is intentionally compact so you can switch from one model to another after quota or token exhaustion and continue from the saved local artifact.
+Reusable Claude continuation prompts are collected in `docs/CLAUDE_HANDOFF_PROMPTS.md`.
 
 Run static environment diagnostics:
 
