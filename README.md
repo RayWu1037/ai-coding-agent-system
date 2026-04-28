@@ -144,6 +144,12 @@ $env:PYTHONPATH="C:\Users\yixin\agent_system\src"
 C:\Users\yixin\AppData\Local\Programs\Python\Python313\python.exe -m agent_system --task "Build a command-line todo app with unit tests"
 ```
 
+One-click Windows wrapper:
+
+```powershell
+.\run_cli.bat "Build a command-line todo app with unit tests"
+```
+
 Write the final generated code to a file:
 
 ```powershell
@@ -158,6 +164,18 @@ Start the local server:
 ```powershell
 $env:PYTHONPATH="C:\Users\yixin\agent_system\src"
 C:\Users\yixin\AppData\Local\Programs\Python\Python313\python.exe -m agent_system.ui --port 8000
+```
+
+One-click Windows wrapper:
+
+```powershell
+.\run_ui.bat
+```
+
+Use a custom port:
+
+```powershell
+.\run_ui.bat 8080
 ```
 
 Then open:
