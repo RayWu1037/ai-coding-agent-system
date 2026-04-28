@@ -67,9 +67,16 @@ Use a lightweight placeholder format first, then convert to the venue style late
 ## Next Conversion Steps
 
 1. Pick one title and lock the abstract.
-2. Add citation markers to `UNDERGRAD_AI_WORKFLOW_PAPER.md`.
-3. Turn the reference skeleton into the citation style required by the target venue.
-4. Add one figure:
-   `User -> Controller -> Planner/Coder -> Executor -> Debugger/Reviewer -> Validator -> Session Handoff`
-5. Add one table:
-   `Failure Class / Symptom / Fix / Result`
+2. Convert the current bracketed references into the citation style required by the target venue.
+3. Decide whether the Mermaid architecture diagram should stay inline or be redrawn as a figure image.
+4. Refine Table 1 using venue-specific formatting rules.
+5. Add author line, affiliation, and contact block to the main paper draft.
+
+## Current Status
+
+The main draft in `docs/UNDERGRAD_AI_WORKFLOW_PAPER.md` now includes:
+
+- citation markers
+- a system architecture figure
+- a failure taxonomy table
+- a references section

@@ -3,7 +3,7 @@
 
 ### Abstract
 
-This paper studies how a systems-oriented undergraduate can use large language models to design, implement, debug, document, evaluate, and publicly present a non-trivial software project. The case study is a local multi-agent coding harness built around planner, coder, debugger, reviewer, execution, validation, benchmark, diagnostic, research-wiki, and session-handoff components. Instead of treating AI as a one-shot code generator, this work examines AI as a collaborator embedded in a longer engineering loop. The paper focuses on four questions: which failures repeatedly occur in AI-assisted project work, which prompt patterns reduce those failures while controlling token cost, which validation layers are necessary to turn runnable output into usable output, and which areas of computer science remain most valuable for undergraduates in an AI-rich workflow. The main result is that AI increases leverage, but only for students who can specify constraints, inspect failure modes, validate behavior, and restructure a system when naive generation fails.
+This paper studies how a systems-oriented undergraduate can use large language models to design, implement, debug, document, evaluate, and publicly present a non-trivial software project. The case study is a local multi-agent coding harness built around planner, coder, debugger, reviewer, execution, validation, benchmarking, diagnostics, research-wiki ingestion, and cross-model session handoff. Instead of treating AI as a one-shot code generator, this work examines AI as a collaborator embedded in a longer engineering loop [1][2]. The paper focuses on four questions: which failures repeatedly occur in AI-assisted project work, which prompt patterns reduce those failures while controlling token cost, which validation layers are necessary to turn runnable output into usable output, and which areas of computer science remain most valuable for undergraduates in an AI-rich workflow. The main result is that AI increases leverage, but only for students who can specify constraints, inspect failure modes, validate behavior, and restructure a system when naive generation fails.
 
 ### 1. Introduction
 
@@ -15,7 +15,7 @@ A common claim in the current AI era is that students no longer need to know muc
 - correctness
 - evaluation
 
-This project provides a concrete case study. The target system was a local multi-agent coding harness inspired by real-world coding agents. The harness was built, stress-tested, repeatedly broken, and repeatedly hardened. The process exposed a wide gap between "AI can generate code" and "AI can reliably help build a durable project."
+This project provides a concrete case study. The target system was a local multi-agent coding harness inspired by real-world coding-agent workflows [1]. The harness was built, stress-tested, repeatedly broken, and repeatedly hardened. The process exposed a wide gap between "AI can generate code" and "AI can reliably help build a durable project."
 
 ### 2. Research Questions
 
@@ -40,8 +40,8 @@ This work makes five concrete contributions.
 
 This case study sits at the intersection of four trends:
 
-- agentic coding systems that split work across planner, coder, debugger, and reviewer roles
-- prompt engineering guidance that emphasizes clear instructions, output constraints, and iterative refinement
+- agentic coding systems that split work across planner, coder, debugger, and reviewer roles [1]
+- prompt engineering guidance that emphasizes clear instructions, output constraints, and iterative refinement [2][3]
 - personal knowledge-base workflows that transform raw sources into linked notes
 - undergraduate project building as a portfolio and research activity rather than only a coursework exercise
 
@@ -69,6 +69,21 @@ The system supports both:
 - SDK backends using Anthropic and OpenAI APIs
 
 The project was developed iteratively under realistic constraints on Windows, including CLI quirks, path issues, quota limits, and environment variability.
+
+#### Figure 1. System architecture
+
+```mermaid
+flowchart TD
+    A[User Task] --> B[Controller]
+    B --> C[Planner]
+    C --> D[Coder]
+    D --> E[Local Python Executor]
+    E --> F[Debugger]
+    F --> G[Reviewer]
+    G --> H[Task Validator]
+    H --> I[Final Code]
+    H --> J[Session Handoff]
+```
 
 ### 6. Methodology
 
@@ -102,11 +117,11 @@ This is sufficient for an engineering case study because the goal is not statist
 
 #### 6.3 Why the research-wiki component mattered
 
-The research-wiki workflow turned out to be methodologically important rather than cosmetic. Initially, a standalone generated script was enough to prove that raw source files could be converted into linked notes. However, that script lived outside the main package and therefore sat outside the project’s normal testing and review path. Moving the ingester into tracked project code had three benefits:
+The research-wiki workflow turned out to be methodologically important rather than cosmetic. Initially, a standalone generated script was enough to prove that raw source files could be converted into linked notes. However, that script lived outside the main package and therefore sat outside the project's normal testing and review path. Moving the ingester into tracked project code had three benefits:
 
 - its heuristics became inspectable and versioned
 - its failure patterns became testable
-- the same toolchain used to build the project could also be used to build the paper’s source base
+- the same toolchain used to build the project could also be used to build the paper's source base
 
 This closed the loop between implementation, documentation, and research workflow.
 
@@ -132,6 +147,7 @@ The second level examined whether the output was actually useful. For knowledge-
 - avoiding malformed `[[links]]`
 - rejecting low-value concept labels such as `Notes`, `Source`, or `Core Idea`
 - producing an index that links to generated notes
+- separating short title aliases from related concepts in generated notes
 
 This layer mattered because a generated tool could run successfully while still creating poor notes.
 
@@ -151,6 +167,17 @@ The fourth level used local unit tests and offline benchmarks so the project cou
 ### 8. Failure Taxonomy
 
 The project exposed several recurring failure classes.
+
+#### Table 1. Failure taxonomy
+
+| Failure class | Typical symptom | Main fix | Result |
+| --- | --- | --- | --- |
+| Semantic quality failure | Code runs but output is unusable | Deterministic validators | Fewer false positives |
+| Environment misclassification | Quota, login, or path issue looks like code bug | `doctor` and `doctor-live` | Faster diagnosis |
+| Prompt overbreadth | Large plans, slow coding, timeouts | Planner compression and `--fast` | Lower token cost and fewer stalls |
+| Relative-path ambiguity | Generated tools behave differently by cwd | Deterministic execution directory | More repeatable evaluation |
+| Cross-model interruption | Quota or token exhaustion breaks momentum | Session handoff packaging | Easier continuation |
+| Knowledge-base concept noise | Generic labels become formal concepts | Conservative phrase extraction and alias split | Better wiki note quality |
 
 #### 8.1 Runnable but semantically wrong output
 
@@ -220,7 +247,7 @@ Do not emit [specific bad outputs].
 Return only runnable Python code.
 ```
 
-This reduced token waste by removing open-ended exploratory prose and focusing the model on implementation constraints.
+This reduced token waste by removing open-ended exploratory prose and focusing the model on implementation constraints [2][3].
 
 #### 9.2 Planner compression
 
@@ -368,7 +395,7 @@ Based on this case study, a productive AI-assisted workflow for undergraduates l
 10. Document the engineering process.
 11. Convert the process into portfolio artifacts.
 
-This workflow is substantially more effective than simply asking a model to "build the whole thing."
+This workflow is substantially more effective than simply asking a model to "build the whole thing" [2][3].
 
 ### 13. Discussion
 
@@ -425,3 +452,17 @@ The students who benefit most from AI-assisted engineering will likely be those 
 - convert project work into public, reproducible artifacts
 
 In that sense, AI does not eliminate the need for computer science fundamentals. It makes their practical value more obvious.
+
+### References
+
+[1] Internal project documentation, *Toward a Practical Multi-Agent Coding Harness on Windows*, `docs/AGENT_SYSTEM_PAPER.md`.
+
+[2] OpenAI, *Prompt Engineering Guide*, source summary in `research_wiki/raw/openai_prompt_engineering.md`.
+
+[3] Anthropic, *Prompt Engineering Overview*, source summary in `research_wiki/raw/anthropic_prompt_engineering.md`.
+
+[4] Anthropic, *Claude Code Model Configuration*, source summary in `research_wiki/raw/claude_code_model_config.md`.
+
+[5] Journal of Open Source Software, *Submission Requirements*, source summary in `research_wiki/raw/joss_submission.md`.
+
+[6] University of Illinois Chicago, *Undergraduate Research Forum*, source summary in `research_wiki/raw/uic_undergraduate_research_forum.md`.
