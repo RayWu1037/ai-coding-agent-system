@@ -60,6 +60,7 @@ class Controller:
         iterations: int | None = None,
         fast_mode: bool | None = None,
         on_status: StatusCallback | None = None,
+        recorder: SessionRecorder | None = None,
     ) -> RunSummary:
         use_fast_mode = self.settings.fast_mode if fast_mode is None else fast_mode
         max_iterations = iterations or self.settings.max_debug_iterations
@@ -67,6 +68,8 @@ class Controller:
         self._notify(on_status, "planning", "Building implementation plan.")
         plan = self.planner.run(task).content
         compact_plan = self._compact_plan(plan, fast_mode=use_fast_mode)
+        if recorder is not None:
+            recorder.checkpoint(plan=compact_plan, iterations_used=0)
         self._notify(on_status, "coding", "Generating initial solution.")
         try:
             code = self.coder.run(task, compact_plan).content
@@ -80,6 +83,13 @@ class Controller:
                 task,
                 self._fallback_plan(task, compact_plan, fast_mode=use_fast_mode),
             ).content
+        if recorder is not None:
+            recorder.checkpoint(
+                plan=compact_plan,
+                code=code,
+                iterations_used=0,
+                failure_stage="coding",
+            )
         success = False
         iterations_used = 0
         last_stdout = ""
@@ -112,7 +122,27 @@ class Controller:
                     "success",
                     f"Execution succeeded on attempt {iterations_used}.",
                 )
+                if recorder is not None:
+                    recorder.checkpoint(
+                        plan=compact_plan,
+                        code=code,
+                        success=True,
+                        iterations_used=iterations_used,
+                        failure_stage="",
+                        last_stdout=last_stdout,
+                        last_stderr=last_stderr,
+                    )
                 break
+            if recorder is not None:
+                recorder.checkpoint(
+                    plan=compact_plan,
+                    code=code,
+                    success=False,
+                    iterations_used=iterations_used,
+                    failure_stage=failure_stage,
+                    last_stdout=last_stdout,
+                    last_stderr=last_stderr,
+                )
             if index == max_iterations:
                 break
             self._notify(
@@ -121,9 +151,30 @@ class Controller:
                 f"Execution failed on attempt {iterations_used}; requesting fix.",
             )
             code = self.debugger.run(task, code, result.stdout, result.stderr).content
+            if recorder is not None:
+                recorder.checkpoint(
+                    plan=compact_plan,
+                    code=code,
+                    success=False,
+                    iterations_used=iterations_used,
+                    failure_stage="debugging",
+                    last_stdout=last_stdout,
+                    last_stderr=last_stderr,
+                )
 
         self._notify(on_status, "reviewing", "Reviewing final code.")
         review = self.reviewer.run(task, code).content
+        if recorder is not None:
+            recorder.checkpoint(
+                plan=compact_plan,
+                code=code,
+                review=review,
+                success=success,
+                iterations_used=iterations_used,
+                failure_stage=failure_stage,
+                last_stdout=last_stdout,
+                last_stderr=last_stderr,
+            )
         while (
             success
             and review_repair_budget > 0
@@ -154,8 +205,29 @@ class Controller:
             iterations_used += 1
             success = rerun.succeeded
             review_repair_budget -= 1
+            if recorder is not None:
+                recorder.checkpoint(
+                    plan=compact_plan,
+                    code=code,
+                    success=success,
+                    iterations_used=iterations_used,
+                    failure_stage=failure_stage,
+                    last_stdout=last_stdout,
+                    last_stderr=last_stderr,
+                )
             self._notify(on_status, "reviewing", "Reviewing improved code.")
             review = self.reviewer.run(task, code).content
+            if recorder is not None:
+                recorder.checkpoint(
+                    plan=compact_plan,
+                    code=code,
+                    review=review,
+                    success=success,
+                    iterations_used=iterations_used,
+                    failure_stage=failure_stage,
+                    last_stdout=last_stdout,
+                    last_stderr=last_stderr,
+                )
         self._notify(on_status, "done", "Run complete.")
         return RunSummary(
             plan=compact_plan,

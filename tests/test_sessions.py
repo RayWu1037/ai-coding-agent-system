@@ -52,6 +52,38 @@ class SessionTests(unittest.TestCase):
         self.assertTrue((recorder.session_dir / "handoff.md").exists())
         self.assertTrue((recorder.session_dir / "final_code.py").exists())
 
+    def test_checkpoint_writes_midrun_handoff_and_current_code(self) -> None:
+        root = Path.cwd() / ".test_sessions" / uuid.uuid4().hex
+        root.mkdir(parents=True, exist_ok=False)
+        self.addCleanup(shutil.rmtree, root, True)
+        recorder = SessionRecorder(
+            task="Build a wiki ingester",
+            backend="cli",
+            fast_mode=True,
+            iterations=3,
+            root_dir=root,
+        )
+
+        recorder.checkpoint(
+            plan="1. Parse raw markdown.\n2. Write notes.",
+            code="print('partial')\n",
+            success=False,
+            iterations_used=1,
+            failure_stage="debugging",
+            last_stdout="created notes/",
+            last_stderr="missing alias split",
+        )
+
+        handoff = (recorder.session_dir / "handoff.md").read_text(encoding="utf-8")
+        current_code = (recorder.session_dir / "current_code.py").read_text(encoding="utf-8")
+        state = (recorder.session_dir / "session.json").read_text(encoding="utf-8")
+
+        self.assertIn("Load code from:", handoff)
+        self.assertIn("Most recent failure stage: debugging", handoff)
+        self.assertIn("missing alias split", handoff)
+        self.assertIn("print('partial')", current_code)
+        self.assertIn("current_code.py", state)
+
 
 if __name__ == "__main__":
     unittest.main()
