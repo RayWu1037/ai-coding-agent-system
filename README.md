@@ -226,7 +226,7 @@ Run offline benchmarks:
 
 ```powershell
 .\run_cli.bat --benchmark
-.\run_cli.bat --benchmark --output reports\benchmarks.md
+.\run_cli.bat --benchmark --benchmark-output reports\benchmarks.md
 ```
 
 Build or refresh the local research wiki:

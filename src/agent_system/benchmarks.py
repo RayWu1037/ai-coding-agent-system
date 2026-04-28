@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import json
 import shutil
+import subprocess
 import sys
 import uuid
 from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 
 from agent_system.tools.executor import PythonExecutor
@@ -47,14 +49,40 @@ def format_benchmark_report(results: list[BenchmarkResult]) -> str:
     return "\n".join(lines)
 
 
+def _git_commit() -> str:
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+    except Exception:
+        return "unknown"
+
+
 def write_benchmark_report(output_path: Path, results: list[BenchmarkResult]) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    run_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    python_ver = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+    commit = _git_commit()
     if output_path.suffix.lower() == ".json":
-        payload = {"results": [asdict(result) for result in results]}
+        payload = {
+            "run_at": run_at,
+            "python": python_ver,
+            "commit": commit,
+            "results": [asdict(result) for result in results],
+        }
         output_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
         return
+    passed = sum(1 for r in results if r.status == "ok")
+    total = len(results)
     lines = [
         "# Benchmark Report",
+        "",
+        f"- **Run at:** {run_at}",
+        f"- **Python:** {python_ver}",
+        f"- **Commit:** `{commit}`",
+        f"- **Result:** {passed}/{total} passed",
         "",
         "| Status | Benchmark | Detail |",
         "| --- | --- | --- |",
