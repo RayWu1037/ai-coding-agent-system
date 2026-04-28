@@ -3,7 +3,7 @@
 
 ### Abstract
 
-This paper studies how a systems-oriented undergraduate can use large language models to design, implement, debug, document, and publicly present a non-trivial software project. The case study is a local multi-agent coding harness built around planner, coder, debugger, reviewer, execution, validation, benchmark, and diagnostic components. Instead of treating AI as a one-shot code generator, this work examines AI as a collaborator embedded in a longer engineering loop. The paper focuses on four questions: which failures repeatedly occur in AI-assisted project work, which prompt patterns reduce those failures while controlling token cost, which validation layers are necessary to turn runnable output into usable output, and which areas of computer science remain most valuable for undergraduates in an AI-rich workflow. The main result is that AI increases leverage, but only for students who can specify constraints, inspect failure modes, validate behavior, and restructure a system when naïve generation fails.
+This paper studies how a systems-oriented undergraduate can use large language models to design, implement, debug, document, evaluate, and publicly present a non-trivial software project. The case study is a local multi-agent coding harness built around planner, coder, debugger, reviewer, execution, validation, benchmark, diagnostic, research-wiki, and session-handoff components. Instead of treating AI as a one-shot code generator, this work examines AI as a collaborator embedded in a longer engineering loop. The paper focuses on four questions: which failures repeatedly occur in AI-assisted project work, which prompt patterns reduce those failures while controlling token cost, which validation layers are necessary to turn runnable output into usable output, and which areas of computer science remain most valuable for undergraduates in an AI-rich workflow. The main result is that AI increases leverage, but only for students who can specify constraints, inspect failure modes, validate behavior, and restructure a system when naive generation fails.
 
 ### 1. Introduction
 
@@ -26,7 +26,28 @@ This paper is organized around four research questions:
 3. What engineering controls are required to make AI-generated project work dependable?
 4. In an AI-rich workflow, what should a computer science undergraduate still prioritize learning?
 
-### 3. Case Study Project
+### 3. Contributions
+
+This work makes five concrete contributions.
+
+1. It documents a reproducible undergraduate workflow for building a local multi-agent coding harness under realistic Windows and quota constraints.
+2. It develops a failure taxonomy covering environment faults, prompt overbreadth, semantic quality failure, validation gaps, and cross-model continuation problems.
+3. It hardens the project with deterministic validators, provider fallback, doctor diagnostics, offline benchmarks, and session handoff packaging.
+4. It extends the system with a tracked research-wiki ingester so that source collection, structured notes, and project writing can share the same local toolchain.
+5. It derives a practical curriculum argument: students gain the most from AI when they retain systems, debugging, testing, and specification skills.
+
+### 4. Related Work and Context
+
+This case study sits at the intersection of four trends:
+
+- agentic coding systems that split work across planner, coder, debugger, and reviewer roles
+- prompt engineering guidance that emphasizes clear instructions, output constraints, and iterative refinement
+- personal knowledge-base workflows that transform raw sources into linked notes
+- undergraduate project building as a portfolio and research activity rather than only a coursework exercise
+
+Rather than claiming a new foundation model or a novel theoretical agent architecture, this work contributes an engineering-grounded study of how an undergraduate can operationalize those ideas locally. The project is intentionally modest in scope: it is designed to be buildable on a student machine, inspectable, and repeatable.
+
+### 5. Case Study Project
 
 The project under study is a local multi-agent coding system with the following components:
 
@@ -38,7 +59,9 @@ The project under study is a local multi-agent coding system with the following 
 - task-specific validation
 - benchmark/eval suite
 - doctor/self-check diagnostics
+- research-wiki ingester
 - local Web UI
+- cross-model session handoff packaging
 
 The system supports both:
 
@@ -47,11 +70,89 @@ The system supports both:
 
 The project was developed iteratively under realistic constraints on Windows, including CLI quirks, path issues, quota limits, and environment variability.
 
-### 4. Failure Taxonomy
+### 6. Methodology
+
+The methodology was iterative and intervention-driven rather than purely observational.
+
+#### 6.1 Build loop
+
+Each cycle followed a common pattern:
+
+1. define a task with runtime and acceptance constraints
+2. generate a compact implementation plan
+3. generate runnable code
+4. execute locally
+5. inspect failures
+6. add deterministic checks where repeated failure patterns emerged
+7. rerun with narrower prompts or revised controller logic
+
+#### 6.2 Data collected during development
+
+The main evidence sources were:
+
+- generated code artifacts
+- stdout and stderr traces
+- validator failures
+- doctor output
+- benchmark output
+- update-log entries
+- compact session handoff summaries
+
+This is sufficient for an engineering case study because the goal is not statistical significance across many users. The goal is to explain how failure surfaced and which interventions improved reliability.
+
+#### 6.3 Why the research-wiki component mattered
+
+The research-wiki workflow turned out to be methodologically important rather than cosmetic. Initially, a standalone generated script was enough to prove that raw source files could be converted into linked notes. However, that script lived outside the main package and therefore sat outside the project’s normal testing and review path. Moving the ingester into tracked project code had three benefits:
+
+- its heuristics became inspectable and versioned
+- its failure patterns became testable
+- the same toolchain used to build the project could also be used to build the paper’s source base
+
+This closed the loop between implementation, documentation, and research workflow.
+
+### 7. Evaluation Setup
+
+Evaluation in this project was layered rather than relying on a single metric.
+
+#### 7.1 Runtime success
+
+The first level was simple executability:
+
+- does generated code run
+- does it terminate
+- does it produce expected files
+
+This level was necessary but not sufficient.
+
+#### 7.2 Semantic validation
+
+The second level examined whether the output was actually useful. For knowledge-base tasks this included:
+
+- preserving the first H1 as the note title
+- avoiding malformed `[[links]]`
+- rejecting low-value concept labels such as `Notes`, `Source`, or `Core Idea`
+- producing an index that links to generated notes
+
+This layer mattered because a generated tool could run successfully while still creating poor notes.
+
+#### 7.3 Environment readiness
+
+The third level used `doctor` and `doctor-live` checks to separate project defects from:
+
+- authentication problems
+- provider quota limits
+- path resolution issues
+- scratch-directory permission failures
+
+#### 7.4 Repeatable regression checks
+
+The fourth level used local unit tests and offline benchmarks so the project could still be evaluated when external providers were unavailable.
+
+### 8. Failure Taxonomy
 
 The project exposed several recurring failure classes.
 
-#### 4.1 Runnable but semantically wrong output
+#### 8.1 Runnable but semantically wrong output
 
 This was the most important failure pattern. The generated code might:
 
@@ -61,7 +162,7 @@ This was the most important failure pattern. The generated code might:
 
 For example, the knowledge-base ingester could use the wrong note title, extract noisy concepts, or generate malformed wiki links while still exiting successfully.
 
-#### 4.2 Environment failures misread as coding failures
+#### 8.2 Environment failures misread as coding failures
 
 Many failures came from:
 
@@ -73,7 +174,7 @@ Many failures came from:
 
 These failures initially looked like "the project is broken" when the real problem was environmental.
 
-#### 4.3 Prompt overbreadth
+#### 8.3 Prompt overbreadth
 
 Broad prompts such as "build the whole project" often caused:
 
@@ -84,19 +185,23 @@ Broad prompts such as "build the whole project" often caused:
 
 Overly broad prompts increased both token cost and instability.
 
-#### 4.4 Relative-path ambiguity
+#### 8.4 Relative-path ambiguity
 
 Generated scripts frequently assumed their own working directory. When the harness executed them from a different directory, behavior diverged from the intended tool design.
 
-#### 4.5 Weak success criteria
+#### 8.5 Weak success criteria
 
 A controller that treats `returncode == 0` as success is not strong enough for project-shaped tasks. That rule ignores many product-level errors.
 
-### 5. What Reduced Failure
+#### 8.6 Knowledge-base quality noise
+
+The wiki ingester surfaced a more specific problem: naive concept extraction promoted generic tokens such as `Prompt`, `Docs`, `Source`, and `Success` into formal note concepts. This was not a crash bug. It was a research-quality bug. The fix required moving from broad token frequency heuristics toward more conservative phrase extraction and stronger filtering of low-signal labels.
+
+### 9. What Reduced Failure
 
 Several concrete design choices improved reliability.
 
-#### 5.1 Narrower prompts with hard constraints
+#### 9.1 Narrower prompts with hard constraints
 
 Better prompts:
 
@@ -117,11 +222,11 @@ Return only runnable Python code.
 
 This reduced token waste by removing open-ended exploratory prose and focusing the model on implementation constraints.
 
-#### 5.2 Planner compression
+#### 9.2 Planner compression
 
 The planner was useful, but passing its entire output into the coder created bloat. Compacting plans before coding improved both speed and stability.
 
-#### 5.3 Task-specific validation
+#### 9.3 Task-specific validation
 
 The largest quality gain came from validation. Instead of asking the reviewer model to "notice" all errors, the system introduced explicit checks for:
 
@@ -132,15 +237,15 @@ The largest quality gain came from validation. Instead of asking the reviewer mo
 
 This turned vague dissatisfaction into deterministic rejection rules.
 
-#### 5.4 Environment diagnostics
+#### 9.4 Environment diagnostics
 
 The addition of `doctor` and `doctor-live` split environment readiness from generation quality. This prevented wasted debugging effort and made provider problems legible.
 
-#### 5.5 Benchmarks
+#### 9.5 Benchmarks
 
 Offline benchmark fixtures enabled repeatable evaluation even when model quotas were unavailable. This is especially important for student projects, where external service availability is not guaranteed.
 
-#### 5.6 Cross-model handoff packaging
+#### 9.6 Cross-model handoff packaging
 
 Another practical improvement was automatic session packaging. Each run now saves:
 
@@ -150,11 +255,19 @@ Another practical improvement was automatic session packaging. Each run now save
 
 This matters because undergraduate users often work under quota or token limits. A compact handoff package makes it possible to continue the same task with another model without replaying the entire conversation history.
 
-### 6. Prompting Principles for Lower Token Cost
+#### 9.7 Versioned wiki-ingester heuristics
+
+Folding the research-wiki ingester into the tracked package improved reliability in a more subtle way. Once concept extraction lived in normal source files with tests, it stopped being a one-off artifact and became part of the project's engineering surface. This made it easier to:
+
+- regress-test noisy concept cases
+- refine concept filters incrementally
+- tie note quality directly to project quality
+
+### 10. Prompting Principles for Lower Token Cost
 
 Token efficiency improved when prompts obeyed five principles.
 
-#### 6.1 Specify the implementation boundary
+#### 10.1 Specify the implementation boundary
 
 Bad:
 
@@ -169,7 +282,7 @@ Build the smallest runnable local implementation for ...
 Prefer one Python file unless multiple files are strictly necessary.
 ```
 
-#### 6.2 State what must not happen
+#### 10.2 State what must not happen
 
 Failure prevention prompts were often more effective than feature prompts. For example:
 
@@ -179,23 +292,23 @@ Do not emit malformed wiki links.
 Do not replace the first H1 with a subsection heading.
 ```
 
-#### 6.3 Request deterministic logic over cleverness
+#### 10.3 Request deterministic logic over cleverness
 
 When parsing text, asking for "conservative, predictable logic" helped suppress brittle heuristic behavior.
 
-#### 6.4 Ask for runnable code only
+#### 10.4 Ask for runnable code only
 
 This reduced extra markdown, commentary, and formatting noise that complicates automated execution.
 
-#### 6.5 Reuse local validation language
+#### 10.5 Reuse local validation language
 
 The most efficient repair prompts reused the exact words of validator failures. This reduced re-explanation and helped the debugger target the real issue.
 
-### 7. What CS Students Still Need to Learn
+### 11. What CS Students Still Need to Learn
 
 AI changes the workflow, but it does not erase the value of core CS knowledge. This project suggests that undergraduates should prioritize the following areas.
 
-#### 7.1 Systems thinking
+#### 11.1 Systems thinking
 
 Students still need to understand:
 
@@ -208,11 +321,11 @@ Students still need to understand:
 
 Many project failures were systems failures, not language failures.
 
-#### 7.2 Data structures and algorithms
+#### 11.2 Data structures and algorithms
 
 Even with AI assistance, students must recognize whether generated solutions are structurally sensible and scalable.
 
-#### 7.3 Software engineering discipline
+#### 11.3 Software engineering discipline
 
 Students should still learn:
 
@@ -225,11 +338,11 @@ Students should still learn:
 
 The highest-value work in the case study came from orchestration and validation, not from typing syntax.
 
-#### 7.4 Numerical and probabilistic thinking
+#### 11.4 Numerical and probabilistic thinking
 
 As AI systems become more stochastic, students benefit from understanding uncertainty, convergence, tradeoffs, and evaluation metrics.
 
-#### 7.5 Prompt design as specification writing
+#### 11.5 Prompt design as specification writing
 
 Prompting should be taught less as "chat skill" and more as:
 
@@ -239,7 +352,7 @@ Prompting should be taught less as "chat skill" and more as:
 
 This is closer to software engineering than to casual prompting.
 
-### 8. Proposed Undergraduate AI Workflow
+### 12. Proposed Undergraduate AI Workflow
 
 Based on this case study, a productive AI-assisted workflow for undergraduates looks like this:
 
@@ -257,7 +370,7 @@ Based on this case study, a productive AI-assisted workflow for undergraduates l
 
 This workflow is substantially more effective than simply asking a model to "build the whole thing."
 
-### 9. Implications
+### 13. Discussion
 
 For students:
 
@@ -271,7 +384,32 @@ For project building:
 
 - the ability to design acceptance criteria may be more valuable than the ability to manually write every line of code.
 
-### 10. Conclusion
+For undergraduate research:
+
+- project logs, validator outputs, and prompt revisions can themselves become analyzable research material when the build process is sufficiently structured.
+
+### 14. Limitations
+
+This case study has several limitations.
+
+- It is centered on one developer workflow rather than a cohort study.
+- It depends partly on proprietary model behavior and quota availability.
+- Some improvements are heuristic rather than formally optimal.
+- The research-wiki component currently targets markdown-like source material and does not yet cover PDFs or large multi-document synthesis robustly.
+
+These limitations do not invalidate the results, but they do bound the claims.
+
+### 15. Future Work
+
+The next project directions are clear:
+
+- extend the wiki ingester to broader source formats and stronger concept merging
+- add richer artifact scoring to the benchmark suite
+- compare different model pairings under the same validation regime
+- study whether undergraduates with different backgrounds converge on similar prompt and validation patterns
+- turn the current paper draft, update log, and research wiki into a more formal public release
+
+### 16. Conclusion
 
 The case study suggests a simple conclusion:
 

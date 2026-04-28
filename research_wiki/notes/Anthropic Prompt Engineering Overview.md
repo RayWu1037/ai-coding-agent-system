@@ -2,13 +2,14 @@
 title: "Anthropic Prompt Engineering Overview"
 source: "anthropic_prompt_engineering.md"
 source_sha256: "d63691ffcfee6888fb1481dfdcb9d8543b5c59b21736e3b99100cc1146400778"
-ingested_at: "2026-04-28T21:48:54+00:00"
+ingested_at: "2026-04-28T22:19:10+00:00"
 concepts:
   - "Anthropic Prompt Engineering Overview"
-  - "Docs"
-  - "Prompt"
-  - "Source"
-  - "Success"
+  - "Anthropic Prompt Engineering"
+  - "Vague Quality Judgments"
+  - "Validate Generated Artifacts"
+  - "Coding Harness"
+  - "Complex Tasks"
 ---
 
 # Anthropic Prompt Engineering Overview
@@ -25,4 +26,4 @@ Anthropic's prompt engineering overview says prompt optimization should begin wi
 
 ## Concepts
 
-[[Anthropic Prompt Engineering Overview]], [[Docs]], [[Prompt]], [[Source]], [[Success]]
+[[Anthropic Prompt Engineering Overview]], [[Anthropic Prompt Engineering]], [[Vague Quality Judgments]], [[Validate Generated Artifacts]], [[Coding Harness]], [[Complex Tasks]]

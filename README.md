@@ -29,6 +29,7 @@ This repository is useful as an AI engineering portfolio project because it demo
 - doctor/self-check mode for runtime, path, backend, and live provider diagnostics
 - offline benchmark/eval suite for representative local workloads and artifact checks
 - automatic session/handoff summaries for cross-model continuation
+- tracked research-wiki ingester for turning source notes into linked markdown notes
 - CLI entry point for single-task runs
 - local Web UI for submitting tasks and inspecting runs
 
@@ -75,6 +76,7 @@ agent_system/
       |- controller.py
       |- llm.py
       |- prompts.py
+      |- wiki_ingester.py
       |- ui.py
       |- agents/
       |  |- __init__.py
@@ -223,6 +225,15 @@ Run offline benchmarks:
 .\run_cli.bat --benchmark
 .\run_cli.bat --benchmark --output reports\benchmarks.md
 ```
+
+Build or refresh the local research wiki:
+
+```powershell
+$env:PYTHONPATH="C:\Users\yixin\agent_system\src"
+C:\Users\yixin\AppData\Local\Programs\Python\Python313\python.exe -m agent_system.wiki_ingester --root research_wiki
+```
+
+This ingests files from `research_wiki/raw/`, writes linked notes to `research_wiki/notes/`, and updates `research_wiki/state.json`.
 
 ## Running The Web UI
 

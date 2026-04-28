@@ -2,19 +2,14 @@
 title: "JOSS Submission Requirements"
 source: "joss_submission.md"
 source_sha256: "4d001f82ad34cc9b9c453da2a704417aa34490df40927ed86e0250bc63dfd3dd"
-ingested_at: "2026-04-28T21:48:54+00:00"
+ingested_at: "2026-04-28T22:19:10+00:00"
 concepts:
   - "JOSS Submission Requirements"
-  - "Joss"
-  - "Software"
-  - "Source"
-  - "Development"
-  - "Explains"
-  - "History"
-  - "Public"
-  - "Repository"
-  - "Research"
-  - "Submission"
+  - "JOSS Submission"
+  - "Public Development History"
+  - "Io En Latest Submitting"
+  - "Immediate JOSS Submission"
+  - "In The Repository"
 ---
 
 # JOSS Submission Requirements
@@ -31,4 +26,4 @@ The JOSS submission guide explains that research software should be open source,
 
 ## Concepts
 
-[[JOSS Submission Requirements]], [[Joss]], [[Software]], [[Source]], [[Development]], [[Explains]], [[History]], [[Public]], [[Repository]], [[Research]], [[Submission]]
+[[JOSS Submission Requirements]], [[JOSS Submission]], [[Public Development History]], [[Io En Latest Submitting]], [[Immediate JOSS Submission]], [[In The Repository]]

@@ -2,16 +2,14 @@
 title: "UIC Undergraduate Research Forum"
 source: "uic_undergraduate_research_forum.md"
 source_sha256: "a2018362a30ec290e35cb584686bade591c75d8bcc1dd2955c8a2fa8b2bd1620"
-ingested_at: "2026-04-28T21:48:54+00:00"
+ingested_at: "2026-04-28T22:19:10+00:00"
 concepts:
   - "UIC Undergraduate Research Forum"
-  - "Undergraduate"
-  - "Project"
-  - "Research"
-  - "Source"
-  - "Students"
-  - "Venue"
-  - "Work"
+  - "Broad Academic Audience"
+  - "Reflection On Method"
+  - "Students Present Research"
+  - "Traditional Journal Submission"
+  - "Edu Urf"
 ---
 
 # UIC Undergraduate Research Forum
@@ -28,4 +26,4 @@ The UIC Undergraduate Research Forum is a campus venue where undergraduate stude
 
 ## Concepts
 
-[[UIC Undergraduate Research Forum]], [[Undergraduate]], [[Project]], [[Research]], [[Source]], [[Students]], [[Venue]], [[Work]]
+[[UIC Undergraduate Research Forum]], [[Broad Academic Audience]], [[Reflection On Method]], [[Students Present Research]], [[Traditional Journal Submission]], [[Edu Urf]]

@@ -202,6 +202,28 @@ Outcome:
 
 - a run can now be resumed by another model using a short handoff prompt and saved artifact path instead of replaying a long conversation
 
+## Phase 10: Research Wiki Hardening
+
+Problems observed:
+
+- the first wiki ingester lived as a one-off generated script outside the main package
+- concept extraction promoted low-value labels such as `Prompt`, `Docs`, `Source`, and `Success`
+- source collection for paper writing and project code quality were drifting into separate workflows
+
+Fixes:
+
+- moved the wiki ingester into `src/agent_system/wiki_ingester.py`
+- added conservative phrase-based concept extraction instead of broad single-word promotion
+- filtered generic document labels more aggressively
+- added automated tests for concept quality and note generation
+- documented a repeatable `python -m agent_system.wiki_ingester --root research_wiki` workflow
+
+Outcome:
+
+- the research wiki became part of the tracked, testable project surface
+- note quality improved from "pipeline works" toward "notes are actually reusable"
+- the same codebase now supports both project execution and source-base construction for writing
+
 ## Prompting Patterns That Worked Better
 
 Better prompts had these traits:

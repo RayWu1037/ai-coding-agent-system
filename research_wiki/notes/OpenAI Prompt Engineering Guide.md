@@ -2,17 +2,14 @@
 title: "OpenAI Prompt Engineering Guide"
 source: "openai_prompt_engineering.md"
 source_sha256: "864c3f863513c8c2aadf103ece57995b3f6720ffc2e53f76d52e16cf3c561bda"
-ingested_at: "2026-04-28T21:48:54+00:00"
+ingested_at: "2026-04-28T22:19:10+00:00"
 concepts:
-  - "Openai Prompt Engineering Guide"
-  - "Prompt"
-  - "Clear"
-  - "Instructions"
-  - "Openai"
-  - "Quality"
-  - "Reduce"
-  - "Source"
-  - "Supports"
+  - "OpenAI Prompt Engineering Guide"
+  - "OpenAI Prompt Engineering"
+  - "Avoidable Model Errors"
+  - "Explicit Output Expectations"
+  - "One Shot Request"
+  - "Desired Format"
 ---
 
 # OpenAI Prompt Engineering Guide
@@ -29,4 +26,4 @@ The OpenAI prompt engineering guide explains that better results come from clear
 
 ## Concepts
 
-[[Openai Prompt Engineering Guide]], [[Prompt]], [[Clear]], [[Instructions]], [[Openai]], [[Quality]], [[Reduce]], [[Source]], [[Supports]]
+[[OpenAI Prompt Engineering Guide]], [[OpenAI Prompt Engineering]], [[Avoidable Model Errors]], [[Explicit Output Expectations]], [[One Shot Request]], [[Desired Format]]

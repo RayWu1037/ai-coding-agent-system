@@ -2,19 +2,14 @@
 title: "Claude Code Model Configuration"
 source: "claude_code_model_config.md"
 source_sha256: "ece78f173137877e88ff65d05fabb86501c1158431da60d44432723718c2e9fb"
-ingested_at: "2026-04-28T21:48:54+00:00"
+ingested_at: "2026-04-28T22:19:10+00:00"
 concepts:
   - "Claude Code Model Configuration"
-  - "Model"
-  - "Choice"
-  - "Claude"
-  - "Code"
-  - "Configuration"
-  - "Documentation"
-  - "Explains"
-  - "Project"
-  - "Settings"
-  - "Source"
+  - "Claude Code Model"
+  - "Came From Outdated"
+  - "Choice Affects Planning"
+  - "En Model Config"
+  - "Implicit Model Defaults"
 ---
 
 # Claude Code Model Configuration
@@ -31,4 +26,4 @@ The Claude Code model configuration documentation explains how model aliases suc
 
 ## Concepts
 
-[[Claude Code Model Configuration]], [[Model]], [[Choice]], [[Claude]], [[Code]], [[Configuration]], [[Documentation]], [[Explains]], [[Project]], [[Settings]], [[Source]]
+[[Claude Code Model Configuration]], [[Claude Code Model]], [[Came From Outdated]], [[Choice Affects Planning]], [[En Model Config]], [[Implicit Model Defaults]]
