@@ -22,6 +22,7 @@ class WikiSettings:
 class ParsedDocument:
     title: str
     body: str
+    aliases: list[str]
     concepts: list[str]
     summary: str
 
@@ -349,9 +350,16 @@ def parse_document(path: Path) -> ParsedDocument:
         body_lines.append(line.rstrip())
     body = "\n".join(body_lines).strip()
 
+    aliases = derive_aliases(title)
     concepts = extract_concepts(title, body)
     summary = summarize(body)
-    return ParsedDocument(title=title, body=body, concepts=concepts, summary=summary)
+    return ParsedDocument(
+        title=title,
+        body=body,
+        aliases=aliases,
+        concepts=concepts,
+        summary=summary,
+    )
 
 
 def clean_inline_text(text: str) -> str:
@@ -441,11 +449,6 @@ def split_sentences(text: str) -> list[str]:
 def extract_concepts(title: str, body: str, limit: int = 6) -> list[str]:
     candidates: list[str] = []
 
-    for title_variant in title_variants(title):
-        normalized = normalize_concept(title_variant, from_title=True)
-        if normalized:
-            candidates.append(normalized)
-
     for heading in extract_heading_candidates(body):
         normalized = normalize_concept(heading)
         if normalized:
@@ -481,6 +484,21 @@ def title_variants(title: str) -> list[str]:
         if trimmed:
             variants.append(trimmed)
     return variants
+
+
+def derive_aliases(title: str) -> list[str]:
+    variants = title_variants(title)
+    if len(variants) <= 1:
+        return []
+    seen = {variants[0].casefold()}
+    aliases: list[str] = []
+    for variant in variants[1:]:
+        key = variant.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        aliases.append(variant)
+    return aliases
 
 
 def extract_heading_candidates(body: str) -> list[str]:
@@ -664,8 +682,15 @@ def generate_note(parsed: ParsedDocument, source_path: Path, digest: str, raw_di
         f"source: {yaml_string(source)}",
         f"source_sha256: {yaml_string(digest)}",
         f"ingested_at: {yaml_string(created_at)}",
-        "concepts:",
+        "aliases:",
     ]
+    for alias in parsed.aliases:
+        frontmatter.append(f"  - {yaml_string(alias)}")
+    frontmatter.extend(
+        [
+        "concepts:",
+        ]
+    )
     for concept in parsed.concepts:
         frontmatter.append(f"  - {yaml_string(concept)}")
     frontmatter.append("---")
@@ -679,6 +704,8 @@ def generate_note(parsed: ParsedDocument, source_path: Path, digest: str, raw_di
         f"- File: `{source}`",
         f"- SHA-256: `{digest}`",
     ]
+    if parsed.aliases:
+        sections.extend(["## Aliases", ", ".join(f"`{alias}`" for alias in parsed.aliases)])
     if links:
         sections.extend(["## Concepts", ", ".join(links)])
     return "\n\n".join(sections).rstrip() + "\n"

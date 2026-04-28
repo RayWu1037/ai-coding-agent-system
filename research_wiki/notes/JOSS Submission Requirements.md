@@ -2,14 +2,16 @@
 title: "JOSS Submission Requirements"
 source: "joss_submission.md"
 source_sha256: "4d001f82ad34cc9b9c453da2a704417aa34490df40927ed86e0250bc63dfd3dd"
-ingested_at: "2026-04-28T22:19:10+00:00"
-concepts:
-  - "JOSS Submission Requirements"
+ingested_at: "2026-04-28T22:23:18+00:00"
+aliases:
   - "JOSS Submission"
+concepts:
   - "Public Development History"
   - "Io En Latest Submitting"
   - "Immediate JOSS Submission"
   - "In The Repository"
+  - "Style Software Venue"
+  - "Publicly Hosted"
 ---
 
 # JOSS Submission Requirements
@@ -24,6 +26,10 @@ The JOSS submission guide explains that research software should be open source,
 
 - SHA-256: `4d001f82ad34cc9b9c453da2a704417aa34490df40927ed86e0250bc63dfd3dd`
 
+## Aliases
+
+`JOSS Submission`
+
 ## Concepts
 
-[[JOSS Submission Requirements]], [[JOSS Submission]], [[Public Development History]], [[Io En Latest Submitting]], [[Immediate JOSS Submission]], [[In The Repository]]
+[[Public Development History]], [[Io En Latest Submitting]], [[Immediate JOSS Submission]], [[In The Repository]], [[Style Software Venue]], [[Publicly Hosted]]

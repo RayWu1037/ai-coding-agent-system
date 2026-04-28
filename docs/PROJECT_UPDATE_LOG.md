@@ -215,6 +215,7 @@ Fixes:
 - moved the wiki ingester into `src/agent_system/wiki_ingester.py`
 - added conservative phrase-based concept extraction instead of broad single-word promotion
 - filtered generic document labels more aggressively
+- split note-title aliases from related concepts so knowledge-base notes stop linking to themselves
 - added automated tests for concept quality and note generation
 - documented a repeatable `python -m agent_system.wiki_ingester --root research_wiki` workflow
 

@@ -26,8 +26,9 @@ class WikiIngesterTests(unittest.TestCase):
 
         concepts = extract_concepts(title, body)
 
-        self.assertIn("Anthropic Prompt Engineering Overview", concepts)
-        self.assertIn("Anthropic Prompt Engineering", concepts)
+        self.assertNotIn("Anthropic Prompt Engineering Overview", concepts)
+        self.assertNotIn("Anthropic Prompt Engineering", concepts)
+        self.assertIn("Direct Instructions", concepts)
         self.assertNotIn("Prompt", concepts)
         self.assertNotIn("Source", concepts)
         self.assertNotIn("Docs", concepts)
@@ -61,8 +62,11 @@ class WikiIngesterTests(unittest.TestCase):
         note = (notes_dir / "OpenAI Prompt Engineering Guide.md").read_text(
             encoding="utf-8"
         )
-        self.assertIn("[[OpenAI Prompt Engineering]]", note)
+        self.assertIn('  - "OpenAI Prompt Engineering"', note)
+        self.assertIn("## Aliases", note)
         self.assertIn("[[Iterative Refinement]]", note)
+        self.assertNotIn("[[OpenAI Prompt Engineering Guide]]", note)
+        self.assertNotIn("[[OpenAI Prompt Engineering]]", note)
         self.assertNotIn("[[Prompt]]", note)
         self.assertNotIn("[[Source]]", note)
 

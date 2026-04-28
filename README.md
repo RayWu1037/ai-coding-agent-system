@@ -234,6 +234,7 @@ C:\Users\yixin\AppData\Local\Programs\Python\Python313\python.exe -m agent_syste
 ```
 
 This ingests files from `research_wiki/raw/`, writes linked notes to `research_wiki/notes/`, and updates `research_wiki/state.json`.
+Generated notes now keep short title variants under `aliases` and reserve `concepts` for related ideas, which helps reduce self-referential wiki noise.
 
 ## Running The Web UI
 
