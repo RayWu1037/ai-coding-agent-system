@@ -26,6 +26,7 @@ This repository is useful as an AI engineering portfolio project because it demo
 - Claude Code CLI plus Codex CLI integration
 - Anthropic SDK plus OpenAI SDK integration
 - environment-variable based configuration
+- doctor/self-check mode for runtime, path, backend, and live provider diagnostics
 - CLI entry point for single-task runs
 - local Web UI for submitting tasks and inspecting runs
 
@@ -123,6 +124,7 @@ Important environment variables:
 
 ```env
 AGENT_BACKEND=auto
+AGENT_FAST_MODE=0
 OPENAI_API_KEY=
 ANTHROPIC_API_KEY=
 OPENAI_MODEL=gpt-4o
@@ -130,7 +132,7 @@ ANTHROPIC_MODEL=sonnet
 CODEX_MODEL=
 CLAUDE_CLI_PATH=C:\Users\yixin\.local\bin\claude.exe
 CODEX_CLI_PATH=C:\Users\yixin\AppData\Roaming\npm\node_modules\@openai\codex\node_modules\@openai\codex-win32-x64\vendor\x86_64-pc-windows-msvc\codex\codex.exe
-CLI_TIMEOUT_SECONDS=120
+CLI_TIMEOUT_SECONDS=300
 EXECUTION_TIMEOUT_SECONDS=8
 MAX_DEBUG_ITERATIONS=3
 ```
@@ -150,11 +152,52 @@ One-click Windows wrapper:
 .\run_cli.bat "Build a command-line todo app with unit tests"
 ```
 
+Fast mode for project-shaped tasks:
+
+```powershell
+$env:PYTHONPATH="C:\Users\yixin\agent_system\src"
+C:\Users\yixin\AppData\Local\Programs\Python\Python313\python.exe -m agent_system --fast --task "Write a minimal Python project for an Obsidian-style knowledge-base ingester"
+```
+
+Fast mode wrapper:
+
+```powershell
+.\run_cli.bat --fast "Write a minimal Python project for an Obsidian-style knowledge-base ingester"
+```
+
 Write the final generated code to a file:
 
 ```powershell
 $env:PYTHONPATH="C:\Users\yixin\agent_system\src"
 C:\Users\yixin\AppData\Local\Programs\Python\Python313\python.exe -m agent_system --task "Write a stock backtester" --iterations 4 --output generated_backtester.py
+```
+
+Run static environment diagnostics:
+
+```powershell
+$env:PYTHONPATH="C:\Users\yixin\agent_system\src"
+C:\Users\yixin\AppData\Local\Programs\Python\Python313\python.exe -m agent_system --doctor
+```
+
+Run live provider diagnostics:
+
+```powershell
+$env:PYTHONPATH="C:\Users\yixin\agent_system\src"
+C:\Users\yixin\AppData\Local\Programs\Python\Python313\python.exe -m agent_system --doctor --doctor-live
+```
+
+Doctor wrapper examples:
+
+```powershell
+.\run_cli.bat --doctor
+.\run_cli.bat --doctor --live
+```
+
+Save a doctor report to Markdown or JSON:
+
+```powershell
+.\run_cli.bat --doctor --output reports\doctor.md
+.\run_cli.bat --doctor --live --output reports\doctor.json
 ```
 
 ## Running The Web UI

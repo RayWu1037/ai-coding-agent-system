@@ -5,6 +5,7 @@ import subprocess
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable
 
 from anthropic import Anthropic
 from openai import OpenAI
@@ -14,6 +15,16 @@ from agent_system.config import Settings
 
 class LLMError(RuntimeError):
     """Raised when no suitable LLM provider is configured."""
+
+
+class AggregateLLMError(LLMError):
+    """Raised when every configured provider fails."""
+
+    def __init__(self, operation: str, errors: list[str]) -> None:
+        joined = "\n".join(f"- {error}" for error in errors)
+        super().__init__(f"All providers failed for {operation}:\n{joined}")
+        self.operation = operation
+        self.errors = errors
 
 
 @dataclass
@@ -81,15 +92,20 @@ class ClaudeCLIClient:
         if self._model:
             command.extend(["--model", self._model])
         command.append(message.user)
-        completed = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=self._timeout_seconds,
-            check=False,
-        )
+        try:
+            completed = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=self._timeout_seconds,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise TimeoutError(
+                f"Claude CLI timed out after {self._timeout_seconds}s."
+            ) from exc
         if completed.returncode != 0:
             raise LLMError(completed.stderr.strip() or "Claude CLI call failed.")
         return _normalize_model_text(completed.stdout)
@@ -109,10 +125,13 @@ class CodexCLIClient:
         self._workspace = workspace
 
     def complete(self, message: Message) -> str:
+        scratch_dir = self._workspace / ".agent_system_runs"
+        scratch_dir.mkdir(parents=True, exist_ok=True)
         with tempfile.NamedTemporaryFile(
             prefix="codex-last-message-",
             suffix=".txt",
             delete=False,
+            dir=scratch_dir,
         ) as handle:
             output_path = Path(handle.name)
 
@@ -131,16 +150,21 @@ class CodexCLIClient:
             ]
             if self._model:
                 command.extend(["--model", self._model])
-            completed = subprocess.run(
-                command,
-                input=message.combined_prompt(),
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                timeout=self._timeout_seconds,
-                check=False,
-            )
+            try:
+                completed = subprocess.run(
+                    command,
+                    input=message.combined_prompt(),
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    timeout=self._timeout_seconds,
+                    check=False,
+                )
+            except subprocess.TimeoutExpired as exc:
+                raise TimeoutError(
+                    f"Codex CLI timed out after {self._timeout_seconds}s."
+                ) from exc
             if completed.returncode != 0:
                 raise LLMError(completed.stderr.strip() or "Codex CLI call failed.")
             if output_path.exists():
@@ -168,26 +192,50 @@ class LLMRegistry:
         self._initialize_cli_clients()
 
     def plan_and_code(self, message: Message) -> str:
+        candidates: list[tuple[str, Callable[[], str]]] = []
         if self._claude_cli is not None:
-            return self._claude_cli.complete(message)
-        if self._settings.backend == "cli":
-            raise LLMError("Claude CLI backend requested but no Claude CLI executable was found.")
+            candidates.append(("Claude CLI", lambda: self._claude_cli.complete(message)))
+        if self._codex_cli is not None:
+            candidates.append(("Codex CLI", lambda: self._codex_cli.complete(message)))
         if self._anthropic is not None:
-            return self._anthropic.complete(message)
+            candidates.append(("Anthropic API", lambda: self._anthropic.complete(message)))
         if self._openai is not None:
-            return self._openai.complete(message)
-        raise LLMError("No provider configured for planning/coding.")
+            candidates.append(("OpenAI API", lambda: self._openai.complete(message)))
+        if self._settings.backend == "cli" and not candidates:
+            raise LLMError("CLI backend requested but no planning/coding provider is available.")
+        return self._complete_with_fallback("planning/coding", candidates)
 
     def debug_and_review(self, message: Message) -> str:
+        candidates: list[tuple[str, Callable[[], str]]] = []
         if self._codex_cli is not None:
-            return self._codex_cli.complete(message)
-        if self._settings.backend == "cli":
-            raise LLMError("Codex CLI backend requested but no Codex CLI executable was found.")
+            candidates.append(("Codex CLI", lambda: self._codex_cli.complete(message)))
+        if self._claude_cli is not None:
+            candidates.append(("Claude CLI", lambda: self._claude_cli.complete(message)))
         if self._openai is not None:
-            return self._openai.complete(message)
+            candidates.append(("OpenAI API", lambda: self._openai.complete(message)))
         if self._anthropic is not None:
-            return self._anthropic.complete(message)
-        raise LLMError("No provider configured for debugging/review.")
+            candidates.append(("Anthropic API", lambda: self._anthropic.complete(message)))
+        if self._settings.backend == "cli" and not candidates:
+            raise LLMError("CLI backend requested but no debugging/review provider is available.")
+        return self._complete_with_fallback("debugging/review", candidates)
+
+    def _complete_with_fallback(
+        self,
+        operation: str,
+        candidates: list[tuple[str, Callable[[], str]]],
+    ) -> str:
+        if not candidates:
+            raise LLMError(f"No provider configured for {operation}.")
+
+        errors: list[str] = []
+        for label, complete in candidates:
+            try:
+                return complete()
+            except TimeoutError as exc:
+                errors.append(f"{label}: {exc}")
+            except LLMError as exc:
+                errors.append(f"{label}: {exc}")
+        raise AggregateLLMError(operation, errors)
 
     def _initialize_cli_clients(self) -> None:
         if self._settings.backend not in {"auto", "cli"}:

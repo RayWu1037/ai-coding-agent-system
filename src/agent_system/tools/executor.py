@@ -43,6 +43,7 @@ class PythonExecutor:
                     [self.python_command, str(script_path)],
                     capture_output=True,
                     text=True,
+                    cwd=run_dir,
                     timeout=self.timeout_seconds,
                 )
                 return ExecutionResult(

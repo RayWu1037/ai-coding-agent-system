@@ -8,6 +8,7 @@ from pathlib import Path
 @dataclass(frozen=True)
 class Settings:
     backend: str
+    fast_mode: bool
     openai_api_key: str | None
     anthropic_api_key: str | None
     openai_model: str
@@ -32,6 +33,7 @@ def load_settings() -> Settings:
     _load_dotenv()
     return Settings(
         backend=os.getenv("AGENT_BACKEND", "auto"),
+        fast_mode=_parse_bool(os.getenv("AGENT_FAST_MODE", "0")),
         openai_api_key=os.getenv("OPENAI_API_KEY"),
         anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
         openai_model=os.getenv("OPENAI_MODEL", "gpt-4o"),
@@ -39,7 +41,7 @@ def load_settings() -> Settings:
         codex_model=os.getenv("CODEX_MODEL"),
         claude_cli_path=os.getenv("CLAUDE_CLI_PATH"),
         codex_cli_path=os.getenv("CODEX_CLI_PATH"),
-        cli_timeout_seconds=int(os.getenv("CLI_TIMEOUT_SECONDS", "120")),
+        cli_timeout_seconds=int(os.getenv("CLI_TIMEOUT_SECONDS", "300")),
         execution_timeout_seconds=int(os.getenv("EXECUTION_TIMEOUT_SECONDS", "8")),
         max_debug_iterations=int(os.getenv("MAX_DEBUG_ITERATIONS", "3")),
     )
@@ -57,3 +59,7 @@ def _load_dotenv() -> None:
             continue
         key, value = line.split("=", 1)
         os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+def _parse_bool(value: str) -> bool:
+    return value.strip().lower() in {"1", "true", "yes", "on"}

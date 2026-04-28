@@ -9,4 +9,15 @@ venv/
 dist/
 build/
 generated_*.py
+kb_ingester_generated*.py
 .agent_system_runs/
+kb_test_env*/
+notes/
+raw/
+vault/
+reports/
+state.json
+processed.json
+.test_*/
+.test_controller_validation/
+tmp*/
