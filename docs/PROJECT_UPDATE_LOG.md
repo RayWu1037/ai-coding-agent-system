@@ -183,6 +183,25 @@ Purpose:
 
 - turn the build process into a narrative suitable for portfolio, research-style writeup, and interview discussion
 
+## Phase 9: Cross-Model Continuation
+
+Problems observed:
+
+- model quotas or token limits could interrupt a useful run
+- switching from GPT-style workflows to Claude-style workflows usually meant losing local context
+- long chat history was an inefficient handoff format
+
+Fixes:
+
+- added automatic session directories
+- added compact `handoff.md` files
+- saved `final_code.py` and `session.json` for every run
+- exposed session output through the CLI
+
+Outcome:
+
+- a run can now be resumed by another model using a short handoff prompt and saved artifact path instead of replaying a long conversation
+
 ## Prompting Patterns That Worked Better
 
 Better prompts had these traits:

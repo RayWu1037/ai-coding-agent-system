@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from agent_system.controller import Controller, RunSummary
+from agent_system.sessions import SessionRecorder
 
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -28,6 +29,8 @@ class JobState:
     review: str = ""
     success: bool | None = None
     error: str | None = None
+    session_dir: str = ""
+    handoff_path: str = ""
     timeline: list[dict[str, str]] = field(default_factory=list)
 
     def update(self, stage: str, message: str) -> None:
@@ -97,13 +100,21 @@ class AgentUI:
         if job is None:
             return
 
+        recorder: SessionRecorder | None = None
         try:
             controller = Controller()
+            recorder = SessionRecorder(
+                task=job.task,
+                backend=controller.settings.backend,
+                fast_mode=controller.settings.fast_mode,
+                iterations=job.iterations,
+            )
 
             def on_status(stage: str, message: str) -> None:
                 current = self.store.get(job_id)
                 if current is not None:
                     current.update(stage, message)
+                recorder.update(stage, message)
 
             job.update("starting", "Initializing controller.")
             summary = controller.run(
@@ -111,10 +122,16 @@ class AgentUI:
                 iterations=job.iterations,
                 on_status=on_status,
             )
+            recorder.finish(summary)
+            recorder.save_report_aliases()
             current = self.store.get(job_id)
             if current is not None:
                 current.finish(summary)
+                current.session_dir = str(recorder.session_dir)
+                current.handoff_path = str(recorder.session_dir / "handoff.md")
         except Exception as exc:
+            if recorder is not None:
+                recorder.fail(str(exc))
             current = self.store.get(job_id)
             if current is not None:
                 current.fail(str(exc))

@@ -140,6 +140,16 @@ The addition of `doctor` and `doctor-live` split environment readiness from gene
 
 Offline benchmark fixtures enabled repeatable evaluation even when model quotas were unavailable. This is especially important for student projects, where external service availability is not guaranteed.
 
+#### 5.6 Cross-model handoff packaging
+
+Another practical improvement was automatic session packaging. Each run now saves:
+
+- a machine-readable session state
+- the latest generated code artifact
+- a compact handoff summary with the next recommended prompt
+
+This matters because undergraduate users often work under quota or token limits. A compact handoff package makes it possible to continue the same task with another model without replaying the entire conversation history.
+
 ### 6. Prompting Principles for Lower Token Cost
 
 Token efficiency improved when prompts obeyed five principles.
@@ -241,8 +251,9 @@ Based on this case study, a productive AI-assisted workflow for undergraduates l
 6. Execute locally.
 7. Validate behavior with deterministic checks.
 8. Use validator output as repair input.
-9. Document the engineering process.
-10. Convert the process into portfolio artifacts.
+9. Save a compact handoff summary for cross-model continuation.
+10. Document the engineering process.
+11. Convert the process into portfolio artifacts.
 
 This workflow is substantially more effective than simply asking a model to "build the whole thing."
 

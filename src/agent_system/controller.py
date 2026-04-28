@@ -18,6 +18,7 @@ from agent_system.agents.reviewer import ReviewerAgent
 from agent_system.config import load_settings
 from agent_system.doctor import run_doctor
 from agent_system.llm import LLMError, LLMRegistry
+from agent_system.sessions import SessionRecorder
 from agent_system.task_profiles import is_knowledge_base_task
 from agent_system.tools.executor import PythonExecutor
 from agent_system.validation import (
@@ -33,6 +34,9 @@ class RunSummary:
     review: str
     iterations_used: int
     success: bool
+    last_stdout: str = ""
+    last_stderr: str = ""
+    failure_stage: str = ""
 
 
 StatusCallback = Callable[[str, str], None]
@@ -78,6 +82,9 @@ class Controller:
             ).content
         success = False
         iterations_used = 0
+        last_stdout = ""
+        last_stderr = ""
+        failure_stage = ""
 
         for index in range(max_iterations + 1):
             iterations_used = index + 1
@@ -87,13 +94,19 @@ class Controller:
                 f"Running generated code (attempt {iterations_used}/{max_iterations + 1}).",
             )
             result = self.executor.run(code)
+            last_stdout = result.stdout
+            last_stderr = result.stderr
+            failure_stage = "executing"
             if result.succeeded:
                 validation_feedback = self._validate_successful_output(task, code)
                 if validation_feedback:
                     result.stderr = validation_feedback
                     result.returncode = 2
+                    last_stderr = validation_feedback
+                    failure_stage = "validation"
             if result.succeeded:
                 success = True
+                failure_stage = ""
                 self._notify(
                     on_status,
                     "success",
@@ -135,6 +148,9 @@ class Controller:
                 if validation_feedback:
                     rerun.stderr = validation_feedback
                     rerun.returncode = 2
+            last_stdout = rerun.stdout
+            last_stderr = rerun.stderr
+            failure_stage = "" if rerun.succeeded else "review_repair"
             iterations_used += 1
             success = rerun.succeeded
             review_repair_budget -= 1
@@ -147,6 +163,9 @@ class Controller:
             review=review,
             iterations_used=iterations_used,
             success=success,
+            last_stdout=last_stdout,
+            last_stderr=last_stderr,
+            failure_stage=failure_stage,
         )
 
     @staticmethod
@@ -306,6 +325,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="When used with --benchmark, save the report to a .md or .json file.",
     )
+    parser.add_argument(
+        "--session-dir",
+        type=Path,
+        default=None,
+        help="Optional directory for saved run sessions and handoff summaries.",
+    )
     return parser
 
 
@@ -327,15 +352,32 @@ def main() -> int:
     if args.benchmark_output is not None:
         parser.error("--benchmark-output requires --benchmark.")
 
+    controller = Controller()
+    recorder = SessionRecorder(
+        task=args.task,
+        backend=controller.settings.backend,
+        fast_mode=args.fast or controller.settings.fast_mode,
+        iterations=args.iterations,
+        root_dir=args.session_dir,
+    )
+
     try:
-        summary = Controller().run(
+        summary = controller.run(
             task=args.task,
             iterations=args.iterations,
             fast_mode=args.fast,
+            on_status=recorder.update,
         )
     except LLMError as exc:
+        recorder.fail(str(exc))
         parser.error(str(exc))
         return 2
+    except Exception as exc:
+        recorder.fail(str(exc))
+        raise
+
+    recorder.finish(summary)
+    recorder.save_report_aliases()
 
     print("=== PLAN ===")
     print(summary.plan)
@@ -355,5 +397,9 @@ def main() -> int:
         args.output.write_text(summary.final_code, encoding="utf-8")
         print()
         print(f"Wrote final code to {args.output}")
+
+    print()
+    print(f"Saved session to {recorder.session_dir}")
+    print(f"Handoff summary: {recorder.session_dir / 'handoff.md'}")
 
     return 0

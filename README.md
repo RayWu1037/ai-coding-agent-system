@@ -28,6 +28,7 @@ This repository is useful as an AI engineering portfolio project because it demo
 - environment-variable based configuration
 - doctor/self-check mode for runtime, path, backend, and live provider diagnostics
 - offline benchmark/eval suite for representative local workloads and artifact checks
+- automatic session/handoff summaries for cross-model continuation
 - CLI entry point for single-task runs
 - local Web UI for submitting tasks and inspecting runs
 
@@ -172,6 +173,21 @@ Write the final generated code to a file:
 $env:PYTHONPATH="C:\Users\yixin\agent_system\src"
 C:\Users\yixin\AppData\Local\Programs\Python\Python313\python.exe -m agent_system --task "Write a stock backtester" --iterations 4 --output generated_backtester.py
 ```
+
+Save session artifacts to a custom directory:
+
+```powershell
+$env:PYTHONPATH="C:\Users\yixin\agent_system\src"
+C:\Users\yixin\AppData\Local\Programs\Python\Python313\python.exe -m agent_system --task "Build a command-line todo app with unit tests" --session-dir sessions
+```
+
+Each run now saves:
+
+- `session.json`
+- `final_code.py`
+- `handoff.md`
+
+The handoff file is intentionally compact so you can switch from one model to another after quota or token exhaustion and continue from the saved local artifact.
 
 Run static environment diagnostics:
 

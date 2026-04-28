@@ -14,6 +14,12 @@ class ControllerParserTests(unittest.TestCase):
         self.assertEqual(args.task, "Build a todo app")
         self.assertFalse(args.doctor)
 
+    def test_session_dir_parses(self) -> None:
+        args = build_parser().parse_args(
+            ["--task", "Build a todo app", "--session-dir", "sessions"]
+        )
+        self.assertEqual(str(args.session_dir), "sessions")
+
 
 if __name__ == "__main__":
     unittest.main()
