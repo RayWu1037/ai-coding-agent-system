@@ -5,12 +5,44 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "agent-system"
 version = "0.1.0"
-description = "A multi-agent coding harness using Anthropic and OpenAI models."
+description = "A local multi-agent coding harness with planner, coder, debugger, and reviewer roles."
+readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.10"
+authors = [
+  { name = "Ruiyi Wu", email = "ray20171037@gmail.com" },
+]
+keywords = [
+  "multi-agent",
+  "AI",
+  "coding-agent",
+  "llm",
+  "anthropic",
+  "openai",
+  "prompt-engineering",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Software Development :: Code Generators",
+]
 dependencies = [
   "anthropic",
   "openai",
 ]
+
+[project.urls]
+Homepage = "https://github.com/RayWu1037/ai-coding-agent-system"
+Repository = "https://github.com/RayWu1037/ai-coding-agent-system"
+Issues = "https://github.com/RayWu1037/ai-coding-agent-system/issues"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
