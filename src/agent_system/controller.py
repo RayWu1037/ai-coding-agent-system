@@ -52,12 +52,12 @@ class Controller:
         success = False
         iterations_used = 0
 
-        for index in range(max_iterations):
+        for index in range(max_iterations + 1):
             iterations_used = index + 1
             self._notify(
                 on_status,
                 "executing",
-                f"Running generated code (iteration {iterations_used}/{max_iterations}).",
+                f"Running generated code (attempt {iterations_used}/{max_iterations + 1}).",
             )
             result = self.executor.run(code)
             if result.succeeded:
@@ -65,13 +65,15 @@ class Controller:
                 self._notify(
                     on_status,
                     "success",
-                    f"Execution succeeded on iteration {iterations_used}.",
+                    f"Execution succeeded on attempt {iterations_used}.",
                 )
+                break
+            if index == max_iterations:
                 break
             self._notify(
                 on_status,
                 "debugging",
-                f"Execution failed on iteration {iterations_used}; requesting fix.",
+                f"Execution failed on attempt {iterations_used}; requesting fix.",
             )
             code = self.debugger.run(task, code, result.stdout, result.stderr).content
 

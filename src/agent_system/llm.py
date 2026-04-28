@@ -85,6 +85,8 @@ class ClaudeCLIClient:
             command,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=self._timeout_seconds,
             check=False,
         )
@@ -134,6 +136,8 @@ class CodexCLIClient:
                 input=message.combined_prompt(),
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=self._timeout_seconds,
                 check=False,
             )
@@ -237,8 +241,8 @@ class LLMRegistry:
             )
 
 
-def _normalize_model_text(text: str) -> str:
-    cleaned = text.strip()
+def _normalize_model_text(text: str | None) -> str:
+    cleaned = (text or "").strip()
     if cleaned.startswith("```"):
         lines = cleaned.splitlines()
         if lines:

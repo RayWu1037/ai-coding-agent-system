@@ -35,7 +35,7 @@ def load_settings() -> Settings:
         openai_api_key=os.getenv("OPENAI_API_KEY"),
         anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
         openai_model=os.getenv("OPENAI_MODEL", "gpt-4o"),
-        anthropic_model=os.getenv("ANTHROPIC_MODEL", "claude-3-7-sonnet-latest"),
+        anthropic_model=os.getenv("ANTHROPIC_MODEL", "sonnet"),
         codex_model=os.getenv("CODEX_MODEL"),
         claude_cli_path=os.getenv("CLAUDE_CLI_PATH"),
         codex_cli_path=os.getenv("CODEX_CLI_PATH"),

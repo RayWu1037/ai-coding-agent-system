@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import shutil
 import subprocess
-import tempfile
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -19,13 +20,23 @@ class ExecutionResult:
 
 
 class PythonExecutor:
-    def __init__(self, timeout_seconds: int = 8, python_command: str = "py") -> None:
+    def __init__(
+        self,
+        timeout_seconds: int = 8,
+        python_command: str = "py",
+        workspace_root: Path | None = None,
+    ) -> None:
         self.timeout_seconds = timeout_seconds
         self.python_command = python_command
+        self.workspace_root = workspace_root or Path.cwd()
+        self.scratch_root = self.workspace_root / ".agent_system_runs"
+        self.scratch_root.mkdir(exist_ok=True)
 
     def run(self, code: str) -> ExecutionResult:
-        with tempfile.TemporaryDirectory(prefix="agent_system_") as temp_dir:
-            script_path = Path(temp_dir) / "generated_task.py"
+        run_dir = self.scratch_root / uuid.uuid4().hex
+        run_dir.mkdir(parents=True, exist_ok=False)
+        script_path = run_dir / "generated_task.py"
+        try:
             script_path.write_text(code, encoding="utf-8")
             try:
                 completed = subprocess.run(
@@ -47,3 +58,5 @@ class PythonExecutor:
                     returncode=124,
                     script_path=script_path,
                 )
+        finally:
+            shutil.rmtree(run_dir, ignore_errors=True)
