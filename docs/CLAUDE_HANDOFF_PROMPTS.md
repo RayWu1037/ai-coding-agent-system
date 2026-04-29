@@ -2,6 +2,8 @@
 
 This document collects reusable prompts for handing the `agent_system` project from one model or agent to Claude Code without replaying a long chat history.
 
+For Codex CLI handoff prompts, see [`CODEX_HANDOFF_PROMPTS.md`](CODEX_HANDOFF_PROMPTS.md).
+
 ## How To Use
 
 1. Make sure the latest run wrote a compact handoff file:
