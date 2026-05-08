@@ -115,6 +115,27 @@ textarea {
   align-items: end;
 }
 
+.mode-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.68);
+  padding: 10px 12px;
+}
+
+.mode-toggle input {
+  width: auto;
+  margin: 0;
+}
+
 button {
   appearance: none;
   border: 0;
@@ -125,6 +146,16 @@ button {
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+}
+
+.button-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.secondary-button {
+  background: rgba(31, 42, 42, 0.9);
 }
 
 .section-head {
@@ -223,10 +254,15 @@ button {
   min-height: 420px;
 }
 
+.handoff-block {
+  min-height: 260px;
+}
+
 @media (max-width: 900px) {
   .grid,
   .outputs,
-  .form-row {
+  .form-row,
+  .button-row {
     grid-template-columns: 1fr;
   }
 

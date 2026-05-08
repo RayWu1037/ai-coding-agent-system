@@ -42,31 +42,141 @@ class RunSummary:
 StatusCallback = Callable[[str, str], None]
 
 
+AGENTRELAY_DEMO_CODE = '''\
+from __future__ import annotations
+
+import argparse
+import csv
+from pathlib import Path
+
+
+FIELDNAMES = ["id", "title", "done"]
+
+
+def load_todos(path: Path) -> list[dict[str, str]]:
+    if not path.exists():
+        return []
+    with path.open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        return [
+            {"id": row["id"], "title": row["title"], "done": row.get("done", "0")}
+            for row in reader
+            if row.get("id") and row.get("title")
+        ]
+
+
+def save_todos(path: Path, todos: list[dict[str, str]]) -> None:
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=FIELDNAMES)
+        writer.writeheader()
+        writer.writerows(todos)
+
+
+def next_id(todos: list[dict[str, str]]) -> str:
+    if not todos:
+        return "1"
+    return str(max(int(todo["id"]) for todo in todos) + 1)
+
+
+def add_todo(path: Path, title: str) -> None:
+    todos = load_todos(path)
+    todos.append({"id": next_id(todos), "title": title, "done": "0"})
+    save_todos(path, todos)
+    print(f"Added: {title}")
+
+
+def list_todos(path: Path) -> None:
+    for todo in load_todos(path):
+        status = "done" if todo["done"] == "1" else "open"
+        print(f"{todo['id']}. {todo['title']} [{status}]")
+
+
+def complete_todo(path: Path, todo_id: str) -> None:
+    todos = load_todos(path)
+    for todo in todos:
+        if todo["id"] == todo_id:
+            todo["done"] = "1"
+            save_todos(path, todos)
+            print(f"Completed: {todo['title']}")
+            return
+    raise SystemExit(f"No todo with id {todo_id}")
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="CSV-backed todo app")
+    parser.add_argument("--file", default="todos.csv")
+    subcommands = parser.add_subparsers(dest="command", required=True)
+    add = subcommands.add_parser("add")
+    add.add_argument("title")
+    subcommands.add_parser("list")
+    done = subcommands.add_parser("done")
+    done.add_argument("id")
+    return parser
+
+
+def main() -> int:
+    args = build_parser().parse_args()
+    path = Path(args.file)
+    if args.command == "add":
+        add_todo(path, args.title)
+    elif args.command == "list":
+        list_todos(path)
+    elif args.command == "done":
+        complete_todo(path, args.id)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+'''
+
+
 class Controller:
     def __init__(self) -> None:
         self.settings = load_settings()
+        self.executor = PythonExecutor(
+            timeout_seconds=self.settings.execution_timeout_seconds
+        )
+        if self.settings.demo_mode:
+            return
         self.llms = LLMRegistry(self.settings)
         self.planner = PlannerAgent(self.llms)
         self.coder = CoderAgent(self.llms)
         self.debugger = DebuggerAgent(self.llms)
         self.reviewer = ReviewerAgent(self.llms)
-        self.executor = PythonExecutor(
-            timeout_seconds=self.settings.execution_timeout_seconds
-        )
 
     def run(
         self,
         task: str,
         iterations: int | None = None,
         fast_mode: bool | None = None,
+        student_mode: bool | None = None,
+        budget_mode: bool | None = None,
         on_status: StatusCallback | None = None,
         recorder: SessionRecorder | None = None,
     ) -> RunSummary:
-        use_fast_mode = self.settings.fast_mode if fast_mode is None else fast_mode
+        use_student_mode = self.settings.student_mode if student_mode is None else student_mode
+        use_budget_mode = self.settings.budget_mode if budget_mode is None else budget_mode
+        if self.settings.demo_mode:
+            return self._run_demo(
+                task,
+                student_mode=use_student_mode,
+                budget_mode=use_budget_mode,
+                on_status=on_status,
+                recorder=recorder,
+            )
+
+        use_fast_mode = (self.settings.fast_mode if fast_mode is None else fast_mode) or use_budget_mode
         max_iterations = iterations or self.settings.max_debug_iterations
-        review_repair_budget = 2 if not use_fast_mode else 1
+        if use_budget_mode:
+            max_iterations = min(max_iterations, 1)
+        review_repair_budget = 0 if use_budget_mode else (2 if not use_fast_mode else 1)
         self._notify(on_status, "planning", "Building implementation plan.")
-        plan = self.planner.run(task).content
+        plan = self.planner.run(
+            task,
+            student_mode=use_student_mode,
+            budget_mode=use_budget_mode,
+        ).content
         compact_plan = self._compact_plan(plan, fast_mode=use_fast_mode)
         if recorder is not None:
             recorder.checkpoint(plan=compact_plan, iterations_used=0)
@@ -163,7 +273,12 @@ class Controller:
                 )
 
         self._notify(on_status, "reviewing", "Reviewing final code.")
-        review = self.reviewer.run(task, code).content
+        review = self.reviewer.run(
+            task,
+            code,
+            student_mode=use_student_mode,
+            budget_mode=use_budget_mode,
+        ).content
         if recorder is not None:
             recorder.checkpoint(
                 plan=compact_plan,
@@ -216,7 +331,12 @@ class Controller:
                     last_stderr=last_stderr,
                 )
             self._notify(on_status, "reviewing", "Reviewing improved code.")
-            review = self.reviewer.run(task, code).content
+            review = self.reviewer.run(
+                task,
+                code,
+                student_mode=use_student_mode,
+                budget_mode=use_budget_mode,
+            ).content
             if recorder is not None:
                 recorder.checkpoint(
                     plan=compact_plan,
@@ -244,6 +364,103 @@ class Controller:
     def _notify(callback: StatusCallback | None, stage: str, message: str) -> None:
         if callback is not None:
             callback(stage, message)
+
+    def _run_demo(
+        self,
+        task: str,
+        student_mode: bool = False,
+        budget_mode: bool = False,
+        on_status: StatusCallback | None = None,
+        recorder: SessionRecorder | None = None,
+    ) -> RunSummary:
+        if student_mode or budget_mode:
+            plan = "\n".join(
+                [
+                    "1. Identify why the saved CSV todo file crashes for a beginner user.",
+                    "2. Fix file loading with safe existence checks and csv.DictReader.",
+                    "3. Keep the CLI small so the student can read and rerun it.",
+                    "4. Run the fixed code locally and keep only useful error evidence.",
+                    "5. Save final_code.py and handoff.md so no context is wasted.",
+                ]
+            )
+        else:
+            plan = "\n".join(
+                [
+                    "1. Reproduce the CSV todo bug with a tiny sample file.",
+                    "2. Replace fragile row parsing with csv.DictReader and csv.DictWriter.",
+                    "3. Keep the command-line interface small: add, list, done, and report.",
+                    "4. Execute the fixed program locally and capture stdout/stderr.",
+                    "5. Review edge cases and write a compact handoff summary.",
+                ]
+            )
+        code = AGENTRELAY_DEMO_CODE
+        if student_mode or budget_mode:
+            review = "\n".join(
+                [
+                    "What was wrong",
+                    "The app treated the saved CSV file as if it was always present and always well-formed. That is risky for beginner projects because the first run may not have a file yet, and saved rows can contain commas or missing values.",
+                    "",
+                    "What was fixed",
+                    "The fixed version checks whether the file exists, uses Python's csv.DictReader and csv.DictWriter instead of manual splitting, and keeps add/list/done commands small enough to inspect.",
+                    "",
+                    "What you learned",
+                    "Local persistence needs defensive loading: check for missing files, parse structured data with the right library, and save a handoff so you can continue later without re-explaining the bug or spending extra AI usage.",
+                ]
+            )
+        else:
+            review = "\n".join(
+                [
+                    "No issues found.",
+                    "Demo notes: the fixed implementation uses the Python standard library, validates CSV rows, and keeps all file writes behind a single helper so the workflow is easy to inspect.",
+                    "Google Cloud path: run this same task with AGENT_BACKEND=gemini and GEMINI_API_KEY set to let Gemini drive planning, coding, debugging, and review while AgentRelay records the execution timeline and handoff.",
+                    "Partner MCP path: connect a GitLab MCP server so the task can start from an issue and end with a reviewable patch plus session artifacts.",
+                ]
+            )
+        label = "AccessBridge" if student_mode or budget_mode else "AgentRelay"
+        self._notify(on_status, "planning", f"Demo mode: loaded {label} CSV todo learning plan.")
+        if recorder is not None:
+            recorder.checkpoint(plan=plan, iterations_used=0)
+        self._notify(on_status, "coding", "Demo mode: produced the corrected Python implementation.")
+        if recorder is not None:
+            recorder.checkpoint(
+                plan=plan,
+                code=code,
+                iterations_used=0,
+                failure_stage="coding",
+            )
+        self._notify(on_status, "executing", "Demo mode: simulated a successful local execution.")
+        stdout = "Added: write proposal\nAdded: record demo\n1. write proposal [open]\n2. record demo [open]\n"
+        if recorder is not None:
+            recorder.checkpoint(
+                plan=plan,
+                code=code,
+                success=True,
+                iterations_used=1,
+                last_stdout=stdout,
+                last_stderr="",
+            )
+        self._notify(on_status, "reviewing", "Demo mode: generated beginner-friendly explanation and handoff notes.")
+        if recorder is not None:
+            recorder.checkpoint(
+                plan=plan,
+                code=code,
+                review=review,
+                success=True,
+                iterations_used=1,
+                last_stdout=stdout,
+                last_stderr="",
+            )
+        self._notify(on_status, "done", "Demo run complete.")
+        return RunSummary(
+            plan=plan,
+            final_code=code,
+            review=review,
+            iterations_used=1,
+            success=True,
+            last_stdout=stdout,
+            last_stderr="",
+            failure_stage="",
+        )
 
     @staticmethod
     def _compact_plan(
@@ -371,6 +588,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="Use a shorter planner-to-coder path and more aggressive simplification.",
     )
     parser.add_argument(
+        "--student-mode",
+        action="store_true",
+        help="Return beginner-friendly learning explanations for under-resourced students.",
+    )
+    parser.add_argument(
+        "--budget-mode",
+        action="store_true",
+        help="Use a quota-saving workflow with compact planning, at most one debug pass, and saved handoff artifacts.",
+    )
+    parser.add_argument(
         "--doctor",
         action="store_true",
         help="Run local environment diagnostics instead of a coding task.",
@@ -428,7 +655,7 @@ def main() -> int:
     recorder = SessionRecorder(
         task=args.task,
         backend=controller.settings.backend,
-        fast_mode=args.fast or controller.settings.fast_mode,
+        fast_mode=args.fast or args.budget_mode or controller.settings.fast_mode or controller.settings.budget_mode,
         iterations=args.iterations,
         root_dir=args.session_dir,
     )
@@ -437,7 +664,9 @@ def main() -> int:
         summary = controller.run(
             task=args.task,
             iterations=args.iterations,
-            fast_mode=args.fast,
+            fast_mode=True if args.fast else None,
+            student_mode=True if args.student_mode else None,
+            budget_mode=True if args.budget_mode else None,
             on_status=recorder.update,
         )
     except LLMError as exc:

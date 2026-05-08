@@ -30,6 +30,7 @@ class LLMRegistryTests(unittest.TestCase):
         registry._codex_cli = None
         registry._anthropic = None
         registry._openai = None
+        registry._gemini = None
         registry._provider_cooldowns = {}
         return registry
 
@@ -62,6 +63,16 @@ class LLMRegistryTests(unittest.TestCase):
 
         self.assertEqual(result, "print('ok')")
         self.assertIn("Claude CLI", registry._provider_cooldowns)
+
+    def test_gemini_backend_uses_only_gemini_provider(self) -> None:
+        registry = self._registry()
+        registry._settings.backend = "gemini"
+        registry._gemini = _FakeClient(response="gemini response")
+        registry._claude_cli = _FakeClient(error=LLMError("should not be called"))
+
+        result = registry.plan_and_code(Message(system="s", user="u"))
+
+        self.assertEqual(result, "gemini response")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,14 @@
+{
+  "project_path": "agentrelay/demo",
+  "iid": 42,
+  "title": "Fix CSV todo app row parsing and produce a recovery handoff",
+  "description": "The current todo CLI stores rows in a CSV file, but it fails when task titles contain commas and sometimes loses the done status when rewriting the file. Please fix the CSV handling, keep the CLI small, and explain the bug clearly for reviewers.",
+  "web_url": "https://gitlab.com/agentrelay/demo/-/issues/42",
+  "labels": ["bug", "agent-demo", "google-cloud"],
+  "acceptance_criteria": [
+    "Use Python standard-library CSV helpers instead of manual string splitting.",
+    "Support add, list, and done commands.",
+    "Preserve todo ids, titles, and done status when rewriting the file.",
+    "Produce review notes and a handoff summary for the next agent or developer."
+  ]
+}

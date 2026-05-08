@@ -3,28 +3,42 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Agent System UI</title>
+    <title>AccessBridge CLI</title>
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
     <main class="shell">
       <section class="hero">
-        <p class="eyebrow">Local Multi-Agent Harness</p>
-        <h1>Controller, coder, debugger, reviewer.</h1>
-        <p class="lede">Submit a Python task, watch the loop progress, and inspect plan, review, and final code in one place.</p>
+        <p class="eyebrow">AccessBridge CLI</p>
+        <h1>Subscription-aware AI coding workflow for under-resourced students.</h1>
+        <p class="lede">Submit a beginner coding task, watch the guided debugging workflow, and inspect the learning plan, explanation, fixed code, and handoff context in one place.</p>
       </section>
 
       <section class="panel">
         <form id="task-form" class="task-form">
-          <label for="task">Task</label>
-          <textarea id="task" name="task" rows="5" placeholder="Build a command-line todo app with CSV persistence and unit tests." required></textarea>
+          <label for="task">Student coding task</label>
+          <textarea id="task" name="task" rows="5" placeholder="A beginner student wrote a Python CSV todo app, but it crashes when loading saved tasks." required></textarea>
+
+          <div class="mode-row">
+            <label class="mode-toggle">
+              <input id="student-mode" name="student-mode" type="checkbox" checked>
+              Student mode
+            </label>
+            <label class="mode-toggle">
+              <input id="budget-mode" name="budget-mode" type="checkbox" checked>
+              Budget mode
+            </label>
+          </div>
 
           <div class="form-row">
             <div>
               <label for="iterations">Max debug iterations</label>
               <input id="iterations" name="iterations" type="number" min="1" max="10" placeholder="3">
             </div>
-            <button type="submit">Run Agent</button>
+            <div class="button-row">
+              <button id="demo-task" class="secondary-button" type="button">Load Demo Task</button>
+              <button type="submit">Run Agent</button>
+            </div>
           </div>
         </form>
       </section>
@@ -32,7 +46,7 @@
       <section class="grid">
         <article class="panel status-panel">
           <div class="section-head">
-            <h2>Run Status</h2>
+            <h2>Guided Debugging Status</h2>
             <span id="status-pill" class="pill">idle</span>
           </div>
           <p id="status-message" class="muted">No active run.</p>
@@ -41,7 +55,7 @@
 
         <article class="panel history-panel">
           <div class="section-head">
-            <h2>Recent Jobs</h2>
+            <h2>Saved Learning Sessions</h2>
           </div>
           <div id="jobs" class="job-list"></div>
         </article>
@@ -50,14 +64,14 @@
       <section class="grid outputs">
         <article class="panel">
           <div class="section-head">
-            <h2>Plan</h2>
+            <h2>Learning Plan</h2>
           </div>
           <pre id="plan-output" class="code-block"></pre>
         </article>
 
         <article class="panel">
           <div class="section-head">
-            <h2>Review</h2>
+            <h2>Explanation & Review</h2>
           </div>
           <pre id="review-output" class="code-block"></pre>
         </article>
@@ -65,9 +79,16 @@
 
       <section class="panel">
         <div class="section-head">
-          <h2>Final Code</h2>
+          <h2>Fixed Code</h2>
         </div>
         <pre id="code-output" class="code-block code-large"></pre>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <h2>Handoff</h2>
+        </div>
+        <pre id="handoff-output" class="code-block handoff-block"></pre>
       </section>
     </main>
     <script src="/app.js"></script>

@@ -151,7 +151,132 @@ Expected outputs:
 Use the handoff file as the compact state summary, and inspect the rest of the repository only as needed.
 ```
 
-## 4. Unified Controller Prompt
+## 4. Hackathon Productization Prompt
+
+```text
+You are continuing an existing local AI engineering project and productizing it for three hackathon submissions.
+
+Workspace:
+C:\Users\yixin\agent_system
+
+Read these files first:
+1. C:\Users\yixin\agent_system\.agent_system_sessions\latest\handoff.md
+2. C:\Users\yixin\agent_system\README.md
+3. C:\Users\yixin\agent_system\docs\PROJECT_UPDATE_LOG.md
+4. C:\Users\yixin\agent_system\docs\SUBMISSION_MATERIALS.md
+5. C:\Users\yixin\agent_system\docs\SUBMISSION_AND_OUTREACH_PLAN.md
+6. C:\Users\yixin\agent_system\docs\CANDIDATE_PROFILE.md
+
+Project context:
+- This repository is an existing multi-agent coding workspace with planner/coder/debugger/reviewer-style orchestration, doctor mode, benchmarks, sessions, and handoff continuity.
+- The goal is not to create three unrelated codebases.
+- The goal is to build one shared core product and package it as three focused sub-products for three different hackathons.
+- Preserve the existing architecture and avoid restarting from scratch.
+- Before final submission, verify all hackathon dates, rules, eligibility requirements, sponsor-track requirements, and submission materials on the official Devpost or organizer pages.
+
+Primary product strategy:
+1. Shared core:
+   - Keep one reusable multi-agent execution engine.
+   - Add or refine shared hackathon features only when they help at least two submissions:
+     - Demo Mode
+     - Run History
+     - Handoff Viewer
+     - Architecture Diagram
+     - Stable demo task
+     - Clean README / setup instructions
+     - Public-facing license and repo hygiene
+2. Google Cloud Rapid Agent Hackathon sub-product:
+   - Product name: AgentRelay
+   - Positioning: Resilient Multi-Agent Coding Workspace
+   - Story: AgentRelay helps developers and students solve coding tasks through a transparent workflow: planner, coder, executor, debugger, reviewer, and recovery handoff.
+   - Required direction: make the product clearly powered by Gemini or Google Cloud Agent Builder where feasible.
+   - Sponsor-track fit: prioritize a GitLab/GitHub workflow or MongoDB run-memory workflow, depending on what is fastest and most credible in the repo.
+   - Demo: issue or task -> plan -> code edit -> run/test -> debug loop -> review -> handoff summary.
+3. ALI Builds Chicago sub-product:
+   - Product name: AccessBridge
+   - Positioning: AI Debugging Tutor for Students Without Coding Support
+   - Story: some beginner programmers have tutors, experienced friends, and strong support networks; many do not. AccessBridge turns confusing programming errors into step-by-step learning help.
+   - Social-impact framing: education equity, beginner support, lower barrier to debugging help.
+   - UI/content vocabulary:
+     - Plan -> Learning Plan
+     - Review -> Explanation
+     - Final Code -> Fixed Code
+     - Timeline -> Debugging Steps
+   - Demo: paste a broken beginner program -> explain the bug -> show fixed code -> explain what the student should learn next.
+4. DevNetwork AI + ML Hackathon sub-product:
+   - Product name: AgentRelay Resilience
+   - Positioning: Resilient Agents with fallback, recovery, and handoff.
+   - Story: what happens when an LLM provider fails, a tool times out, or generated code crashes? AgentRelay Resilience recovers through fallback providers, debugging loops, execution logs, and handoff summaries.
+   - Track fit: TrueFoundry-style resilient agents or any sponsor challenge focused on reliable agent execution.
+   - Demo: intentionally trigger a failure or flaky execution path -> show recovery -> show saved handoff and continuation.
+
+Primary goal for this turn:
+1. Inspect the current repository and identify the smallest practical set of changes needed to support the three-sub-product hackathon strategy.
+2. Implement the highest-value shared foundation first.
+3. Add or update hackathon-facing documentation so the three sub-products are clearly separated while sharing one technical core.
+4. If time allows, create concrete submission packages for each sub-product.
+
+Suggested branch strategy:
+- Shared foundation branch: hackathon-agentrelay
+- Education packaging branch: hackathon-accessbridge
+- Resilience packaging branch: hackathon-resilience
+
+Do not create branches automatically unless the user explicitly asks for branch creation in this turn. If branches already exist, work with the current branch and explain what should be split later.
+
+Priority implementation order:
+1. Repo hygiene:
+   - Add or verify open-source license.
+   - Clean README setup instructions and remove machine-specific private paths from public-facing docs.
+   - Add a top-level Hackathon Submission section or a dedicated docs file.
+2. Shared demo reliability:
+   - Add Demo Mode or improve the existing demo path.
+   - Add a stable demo task:
+     "Fix this buggy Python CSV todo app, explain the bug, run the corrected code, and produce a handoff summary."
+   - Make sure the demo does not depend on fragile paid-provider availability.
+3. Product surfaces:
+   - Add Run History page or docs if the UI already exists.
+   - Add Handoff Viewer page or docs if the UI already exists.
+   - Add an architecture diagram that explains planner/coder/debugger/reviewer/executor/handoff.
+4. Submission packages:
+   - docs/hackathons/agentrelay-google-cloud.md
+   - docs/hackathons/accessbridge-ali-builds.md
+   - docs/hackathons/agentrelay-resilience-devnetwork.md
+   - Each file should include:
+     - one-line pitch
+     - problem
+     - solution
+     - target users
+     - demo flow
+     - technical architecture
+     - judging-criteria mapping
+     - remaining work checklist
+5. Verification:
+   - If code changes are made, run the relevant local tests.
+   - If only docs are changed, do a consistency check across README and docs.
+
+Important constraints:
+- Keep the three sub-products clearly distinct in story, audience, and judging strategy.
+- Keep the implementation shared unless a separation is truly necessary.
+- Do not invent completed integrations. If Gemini, Google Cloud, GitLab, MongoDB, TrueFoundry, or other sponsor integrations are not actually implemented yet, label them as planned or next work.
+- Prefer concrete demo flows over generic marketing language.
+- Keep public-facing writing in English.
+- Keep changes precise and avoid unrelated refactors.
+- Preserve existing user work and do not delete existing docs unless clearly obsolete and confirmed.
+
+Expected outputs:
+- A completed shared foundation change, or a clear first-pass hackathon documentation package if code work is not yet appropriate.
+- Three clearly named sub-product narratives:
+  - AgentRelay for Google Cloud Rapid Agent Hackathon
+  - AccessBridge for ALI Builds Chicago
+  - AgentRelay Resilience for DevNetwork AI + ML Hackathon
+- A concise summary of files changed.
+- Tests or checks run.
+- A short next-action list ordered by deadline and prize/fit.
+
+Use the handoff file as the compact authoritative state summary, and inspect the repository only as needed for implementation details.
+```
+
+## 5. Unified Controller Prompt
 
 ```text
 You are continuing an existing local AI engineering project.

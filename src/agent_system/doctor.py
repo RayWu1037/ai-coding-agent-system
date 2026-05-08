@@ -71,6 +71,7 @@ def collect_doctor_results(settings: Settings, live: bool = False) -> list[Check
     results.append(_check_executor(settings))
     results.append(_check_cli_path("Claude CLI", claude_path))
     results.append(_check_cli_path("Codex CLI", codex_path))
+    results.append(_check_api_key("Gemini API key", settings.has_gemini))
     results.append(_check_api_key("Anthropic API key", settings.has_anthropic))
     results.append(_check_api_key("OpenAI API key", settings.has_openai))
     results.append(_check_backend_readiness(settings, claude_path, codex_path))
@@ -93,7 +94,7 @@ def collect_doctor_results(settings: Settings, live: bool = False) -> list[Check
 def format_doctor_report(settings: Settings, results: list[CheckResult], live: bool) -> str:
     lines = [
         "=== DOCTOR ===",
-        f"backend={settings.backend} fast_mode={settings.fast_mode} live_probes={live}",
+        f"backend={settings.backend} fast_mode={settings.fast_mode} student_mode={settings.student_mode} budget_mode={settings.budget_mode} demo_mode={settings.demo_mode} live_probes={live}",
         "",
     ]
     for result in results:
@@ -109,6 +110,8 @@ def doctor_report_payload(
     return {
         "backend": settings.backend,
         "fast_mode": settings.fast_mode,
+        "student_mode": settings.student_mode,
+        "budget_mode": settings.budget_mode,
         "live_probes": live,
         "results": [asdict(result) for result in results],
     }
@@ -137,6 +140,9 @@ def format_doctor_markdown(settings: Settings, results: list[CheckResult], live:
         "",
         f"- Backend: `{settings.backend}`",
         f"- Fast mode: `{settings.fast_mode}`",
+        f"- Student mode: `{settings.student_mode}`",
+        f"- Budget mode: `{settings.budget_mode}`",
+        f"- Demo mode: `{settings.demo_mode}`",
         f"- Live probes: `{live}`",
         "",
         "| Status | Check | Detail |",
@@ -202,18 +208,29 @@ def _check_backend_readiness(
 ) -> CheckResult:
     has_cli_pair = bool(claude_path and codex_path)
     has_sdk_pair = bool(settings.has_anthropic and settings.has_openai)
+    has_gemini = settings.has_gemini
     if settings.backend == "cli":
         if has_cli_pair:
             return CheckResult("Backend readiness", "ok", "CLI backend has both Claude and Codex available.")
         return CheckResult("Backend readiness", "fail", "CLI backend requires both Claude CLI and Codex CLI.")
+    if settings.backend == "gemini":
+        if has_gemini:
+            return CheckResult("Backend readiness", "ok", "Gemini backend has a Gemini API key.")
+        return CheckResult("Backend readiness", "fail", "Gemini backend requires GEMINI_API_KEY.")
     if settings.backend == "sdk":
-        if has_sdk_pair:
-            return CheckResult("Backend readiness", "ok", "SDK backend has both Anthropic and OpenAI keys.")
-        return CheckResult("Backend readiness", "fail", "SDK backend requires both Anthropic and OpenAI keys.")
-    if has_cli_pair or has_sdk_pair:
-        mode = "CLI pair" if has_cli_pair else "SDK pair"
+        if has_gemini or has_sdk_pair:
+            mode = "Gemini key" if has_gemini else "Anthropic/OpenAI key pair"
+            return CheckResult("Backend readiness", "ok", f"SDK backend can run with the available {mode}.")
+        return CheckResult("Backend readiness", "fail", "SDK backend requires a Gemini key or both Anthropic and OpenAI keys.")
+    if has_cli_pair or has_gemini or has_sdk_pair:
+        if has_cli_pair:
+            mode = "CLI pair"
+        elif has_gemini:
+            mode = "Gemini key"
+        else:
+            mode = "SDK pair"
         return CheckResult("Backend readiness", "ok", f"Auto backend can run with the available {mode}.")
-    return CheckResult("Backend readiness", "fail", "Auto backend has neither a full CLI pair nor a full SDK pair.")
+    return CheckResult("Backend readiness", "fail", "Auto backend has no CLI pair, Gemini key, or full SDK pair.")
 
 
 def _probe_claude_cli(path: str | None, settings: Settings) -> CheckResult:

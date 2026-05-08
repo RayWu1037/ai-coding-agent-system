@@ -24,6 +24,8 @@ class JobState:
     status: str = "queued"
     message: str = "Queued."
     iterations: int | None = None
+    student_mode: bool = False
+    budget_mode: bool = False
     plan: str = ""
     final_code: str = ""
     review: str = ""
@@ -65,8 +67,20 @@ class JobStore:
         self._jobs: dict[str, JobState] = {}
         self._lock = threading.Lock()
 
-    def create(self, task: str, iterations: int | None) -> JobState:
-        job = JobState(id=uuid.uuid4().hex, task=task, iterations=iterations)
+    def create(
+        self,
+        task: str,
+        iterations: int | None,
+        student_mode: bool = False,
+        budget_mode: bool = False,
+    ) -> JobState:
+        job = JobState(
+            id=uuid.uuid4().hex,
+            task=task,
+            iterations=iterations,
+            student_mode=student_mode,
+            budget_mode=budget_mode,
+        )
         with self._lock:
             self._jobs[job.id] = job
         return job
@@ -84,8 +98,19 @@ class AgentUI:
     def __init__(self) -> None:
         self.store = JobStore()
 
-    def submit(self, task: str, iterations: int | None) -> JobState:
-        job = self.store.create(task=task, iterations=iterations)
+    def submit(
+        self,
+        task: str,
+        iterations: int | None,
+        student_mode: bool = False,
+        budget_mode: bool = False,
+    ) -> JobState:
+        job = self.store.create(
+            task=task,
+            iterations=iterations,
+            student_mode=student_mode,
+            budget_mode=budget_mode,
+        )
         thread = threading.Thread(
             target=self._run_job,
             args=(job.id,),
@@ -106,7 +131,7 @@ class AgentUI:
             recorder = SessionRecorder(
                 task=job.task,
                 backend=controller.settings.backend,
-                fast_mode=controller.settings.fast_mode,
+                fast_mode=controller.settings.fast_mode or job.budget_mode,
                 iterations=job.iterations,
             )
 
@@ -120,6 +145,8 @@ class AgentUI:
             summary = controller.run(
                 task=job.task,
                 iterations=job.iterations,
+                student_mode=job.student_mode,
+                budget_mode=job.budget_mode,
                 on_status=on_status,
             )
             recorder.finish(summary)
@@ -175,6 +202,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         payload = self._read_json()
         task = str(payload.get("task", "")).strip()
         iterations = payload.get("iterations")
+        student_mode = bool(payload.get("student_mode", False))
+        budget_mode = bool(payload.get("budget_mode", False))
         if not task:
             self.send_error(HTTPStatus.BAD_REQUEST, "Task is required.")
             return
@@ -184,7 +213,12 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_error(HTTPStatus.BAD_REQUEST, "Iterations must be an integer.")
             return
 
-        job = APP.submit(task=task, iterations=iterations)
+        job = APP.submit(
+            task=task,
+            iterations=iterations,
+            student_mode=student_mode,
+            budget_mode=budget_mode,
+        )
         self._serve_json(self._serialize_job(job), status=HTTPStatus.ACCEPTED)
 
     def log_message(self, format: str, *args: Any) -> None:
@@ -213,7 +247,14 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     @staticmethod
     def _serialize_job(job: JobState) -> dict[str, Any]:
-        return asdict(job)
+        payload = asdict(job)
+        handoff = ""
+        if job.handoff_path:
+            handoff_path = Path(job.handoff_path)
+            if handoff_path.exists():
+                handoff = handoff_path.read_text(encoding="utf-8")
+        payload["handoff"] = handoff
+        return payload
 
 
 def build_parser() -> argparse.ArgumentParser:

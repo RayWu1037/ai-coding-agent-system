@@ -6,6 +6,13 @@ const jobs = document.getElementById("jobs");
 const planOutput = document.getElementById("plan-output");
 const reviewOutput = document.getElementById("review-output");
 const codeOutput = document.getElementById("code-output");
+const handoffOutput = document.getElementById("handoff-output");
+const demoTaskButton = document.getElementById("demo-task");
+const studentModeInput = document.getElementById("student-mode");
+const budgetModeInput = document.getElementById("budget-mode");
+
+const ACCESSBRIDGE_DEMO_TASK =
+  "A beginner student wrote a Python CSV todo app, but it crashes when loading saved tasks. Help explain the bug, fix the code, run it locally, and produce a short learning summary.";
 
 let activeJobId = null;
 let pollTimer = null;
@@ -62,6 +69,7 @@ function renderOutputs(job) {
   planOutput.textContent = job.plan || "";
   reviewOutput.textContent = job.review || "";
   codeOutput.textContent = job.final_code || "";
+  handoffOutput.textContent = job.handoff || job.handoff_path || "";
   setStatus(job.status, job.error || job.message);
   renderTimeline(job.timeline || []);
 }
@@ -114,10 +122,13 @@ form.addEventListener("submit", async (event) => {
   planOutput.textContent = "";
   reviewOutput.textContent = "";
   codeOutput.textContent = "";
+  handoffOutput.textContent = "";
 
   const payload = {
     task,
     iterations: iterationsValue ? Number(iterationsValue) : null,
+    student_mode: studentModeInput.checked,
+    budget_mode: budgetModeInput.checked,
   };
 
   const response = await fetch("/api/jobs", {
@@ -135,6 +146,14 @@ form.addEventListener("submit", async (event) => {
   const job = await response.json();
   activeJobId = job.id;
   await refreshJob(job.id);
+});
+
+demoTaskButton.addEventListener("click", () => {
+  form.task.value = ACCESSBRIDGE_DEMO_TASK;
+  form.iterations.value = "1";
+  studentModeInput.checked = true;
+  budgetModeInput.checked = true;
+  form.task.focus();
 });
 
 refreshJobs().catch((error) => {

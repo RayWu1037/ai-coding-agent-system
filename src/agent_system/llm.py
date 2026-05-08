@@ -79,6 +79,35 @@ class OpenAIClient:
         return _normalize_model_text(response.output_text)
 
 
+class GeminiClient:
+    def __init__(self, api_key: str, model: str) -> None:
+        self._api_key = api_key
+        self._model = model
+
+    def complete(self, message: Message, max_tokens: int = 1600) -> str:
+        try:
+            from google import genai
+            from google.genai import types
+        except ImportError as exc:
+            raise LLMError(
+                "Gemini provider requested but google-genai is not installed."
+            ) from exc
+
+        try:
+            client = genai.Client(api_key=self._api_key)
+            response = client.models.generate_content(
+                model=self._model,
+                contents=message.user,
+                config=types.GenerateContentConfig(
+                    system_instruction=message.system,
+                    max_output_tokens=max_tokens,
+                ),
+            )
+        except Exception as exc:
+            raise LLMError(f"Gemini API call failed: {exc}") from exc
+        return _normalize_model_text(getattr(response, "text", ""))
+
+
 class ClaudeCLIClient:
     def __init__(self, executable: str, model: str, timeout_seconds: int) -> None:
         self._executable = executable
@@ -196,15 +225,27 @@ class LLMRegistry:
             if settings.has_openai
             else None
         )
+        self._gemini = (
+            GeminiClient(settings.gemini_api_key, settings.gemini_model)
+            if settings.has_gemini
+            else None
+        )
         self._provider_cooldowns: dict[str, ProviderCooldown] = {}
         self._initialize_cli_clients()
 
     def plan_and_code(self, message: Message) -> str:
         candidates: list[tuple[str, Callable[[], str]]] = []
+        if self._settings.backend == "gemini":
+            if self._gemini is not None:
+                candidates.append(("Gemini API", lambda: self._gemini.complete(message)))
+            return self._complete_with_fallback("planning/coding", candidates)
+
         if self._claude_cli is not None:
             candidates.append(("Claude CLI", lambda: self._claude_cli.complete(message)))
         if self._codex_cli is not None:
             candidates.append(("Codex CLI", lambda: self._codex_cli.complete(message)))
+        if self._gemini is not None:
+            candidates.append(("Gemini API", lambda: self._gemini.complete(message)))
         if self._anthropic is not None:
             candidates.append(("Anthropic API", lambda: self._anthropic.complete(message)))
         if self._openai is not None:
@@ -215,10 +256,17 @@ class LLMRegistry:
 
     def debug_and_review(self, message: Message) -> str:
         candidates: list[tuple[str, Callable[[], str]]] = []
+        if self._settings.backend == "gemini":
+            if self._gemini is not None:
+                candidates.append(("Gemini API", lambda: self._gemini.complete(message)))
+            return self._complete_with_fallback("debugging/review", candidates)
+
         if self._codex_cli is not None:
             candidates.append(("Codex CLI", lambda: self._codex_cli.complete(message)))
         if self._claude_cli is not None:
             candidates.append(("Claude CLI", lambda: self._claude_cli.complete(message)))
+        if self._gemini is not None:
+            candidates.append(("Gemini API", lambda: self._gemini.complete(message)))
         if self._openai is not None:
             candidates.append(("OpenAI API", lambda: self._openai.complete(message)))
         if self._anthropic is not None:
